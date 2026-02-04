@@ -1,6 +1,5 @@
 """Tests for enum definitions."""
 
-
 from binance_th.models.enums import (
     DepositStatus,
     FilterType,

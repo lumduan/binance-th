@@ -1,6 +1,5 @@
 """Tests for exception hierarchy."""
 
-
 from binance_th.exceptions import (
     BinanceThAPIError,
     BinanceThAuthError,

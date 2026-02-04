@@ -187,12 +187,16 @@ class OrderRequest(RequestModel):
             raise ValueError("Either quantity or quoteOrderQty is required for MARKET orders")
 
         # STOP orders require stopPrice
-        if self.order_type in (
-            OrderType.STOP_LOSS,
-            OrderType.STOP_LOSS_LIMIT,
-            OrderType.TAKE_PROFIT,
-            OrderType.TAKE_PROFIT_LIMIT,
-        ) and self.stop_price is None:
+        if (
+            self.order_type
+            in (
+                OrderType.STOP_LOSS,
+                OrderType.STOP_LOSS_LIMIT,
+                OrderType.TAKE_PROFIT,
+                OrderType.TAKE_PROFIT_LIMIT,
+            )
+            and self.stop_price is None
+        ):
             raise ValueError("stopPrice is required for STOP orders")
 
         # STOP_LOSS_LIMIT and TAKE_PROFIT_LIMIT require price and timeInForce
