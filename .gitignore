@@ -9,8 +9,29 @@ wheels/
 # Virtual environments
 .venv
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Testing
+.pytest_cache/
+
+# Environment
+.env
+.env.local
+
+# GitHub prompts (private)
 .github/instructions/
 .github/prompts/
 .github/copilot-instructions.md
 
-docs/plan/
+# Keep templates private but track phase plans
+docs/plan/*.md
+!docs/plan/phase-*/
