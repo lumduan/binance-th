@@ -23,6 +23,14 @@ coverage.xml
 # Testing
 .pytest_cache/
 
+# Type checking and caching
+.mypy_cache/
+.ruff_cache/
+.uff_cache/
+
+# AI tools
+.claude/
+
 # Environment
 .env
 .env.local
