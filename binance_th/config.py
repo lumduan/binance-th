@@ -77,18 +77,18 @@ class BinanceThConfig(BaseSettings):
     ws_base_url: str = Field(
         default="wss://nbstream.binance.th/w3w/wsa/stream",
         description=(
-            "Default combined-stream WebSocket host (single-host `?streams=` topology). "
-            "The stream router uses this for both GLOBAL and SITE symbols unless the two "
-            "override URLs below are set to non-default values (ADR-0014)."
+            "Reserved single combined-stream host (WSA path). The M5 live probe (2026-07-09) found it "
+            "ACKs SUBSCRIBE but does not push market data; the verified market-stream topology is "
+            "dual-host (below). Kept for forward-compat / user-data (M6); not the market-stream default."
         ),
     )
     ws_base_url_global: str = Field(
         default="wss://www.binance.th/gstream",
-        description="Override WebSocket URL for GLOBAL symbols (dual-host topology)",
+        description="WebSocket host for GLOBAL symbols (verified market-stream route, ADR-0014)",
     )
     ws_base_url_site: str = Field(
         default="wss://www.binance.th/nstream",
-        description="Override WebSocket URL for SITE symbols (dual-host topology)",
+        description="WebSocket host for SITE symbols (verified market-stream route, ADR-0014)",
     )
 
     # Client Settings
