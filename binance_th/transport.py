@@ -23,12 +23,16 @@ from binance_th.envelope import unwrap
 from binance_th.errors import raise_for_http_status
 from binance_th.exceptions import (
     BinanceThAuthError,
+    BinanceThIPBannedError,
     BinanceThNetworkError,
+    BinanceThRateLimitError,
     BinanceThServerError,
     BinanceThTimeoutError,
 )
 from binance_th.models.base import ServerTime
+from binance_th.ratelimit import DualWindowRateLimiter
 from binance_th.redaction import redact_headers, redact_params
+from binance_th.retry import BackoffRetryer
 from binance_th.signing import Signer
 from binance_th.timesync import TimeSync
 
@@ -84,6 +88,24 @@ class NullRetryer:
         return await fn()
 
 
+def _resolve_limiter(limiter: RateLimiter | None, config: BinanceThConfig) -> RateLimiter:
+    """Injected limiter wins; else a real limiter when rate limiting is enabled."""
+    if limiter is not None:
+        return limiter
+    if config.enable_rate_limiting:
+        return DualWindowRateLimiter.from_defaults()
+    return NullRateLimiter()
+
+
+def _resolve_retryer(retryer: Retryer | None, config: BinanceThConfig) -> Retryer:
+    """Injected retryer wins; else a backoff retryer when retries are allowed."""
+    if retryer is not None:
+        return retryer
+    if config.max_retries > 0:
+        return BackoffRetryer()
+    return NullRetryer()
+
+
 class Transport:
     """Async request pipeline over a single ``httpx.AsyncClient``."""
 
@@ -107,8 +129,8 @@ class Transport:
             Signer(config.api_secret) if config.api_secret is not None else None
         )
         self._timesync = timesync or TimeSync()
-        self._limiter: RateLimiter = limiter or NullRateLimiter()
-        self._retryer: Retryer = retryer or NullRetryer()
+        self._limiter: RateLimiter = _resolve_limiter(limiter, config)
+        self._retryer: Retryer = _resolve_retryer(retryer, config)
         self._logger = logger or logging.getLogger("binance_th")
         self._closed = False
 
@@ -168,7 +190,9 @@ class Transport:
                 raise
 
         return await self._retryer.run(
-            attempt, retryable=self._is_retryable, max_retries=self._config.max_retries
+            attempt,
+            retryable=lambda exc: self._is_retryable(exc, mutating=mutating),
+            max_retries=self._config.max_retries,
         )
 
     async def sync_time(self) -> ServerTime:
@@ -268,9 +292,20 @@ class Transport:
         except ValueError:
             return response.text
 
-    def _is_retryable(self, exc: BaseException) -> bool:
-        """Retryable transient failures (used by the M2 retryer, not the M1 no-op)."""
-        return isinstance(exc, (BinanceThNetworkError, BinanceThTimeoutError, BinanceThServerError))
+    def _is_retryable(self, exc: BaseException, *, mutating: bool) -> bool:
+        """Retryable transient failures; never for mutating calls (ADR-0006/0012)."""
+        if mutating:
+            return False
+        return isinstance(
+            exc,
+            (
+                BinanceThNetworkError,
+                BinanceThTimeoutError,
+                BinanceThServerError,
+                BinanceThRateLimitError,
+                BinanceThIPBannedError,
+            ),
+        )
 
     def _log_request(
         self, method: str, path: str, params: Mapping[str, Any], headers: Mapping[str, str]

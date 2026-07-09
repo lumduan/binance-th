@@ -11,6 +11,7 @@ from binance_th.config import BinanceThConfig
 from binance_th.exceptions import (
     BinanceThAuthError,
     BinanceThBadRequestError,
+    BinanceThIPBannedError,
     BinanceThNetworkError,
     BinanceThRateLimitError,
     BinanceThServerError,
@@ -238,14 +239,20 @@ class TestErrorMapping:
             await transport.request("GET", "/api/v1/time", envelope=False)
 
     async def test_is_retryable_predicate(self, mock_transport: TransportFactory) -> None:
-        """Transient failures are retryable; auth failures are not (M2 seam)."""
+        """Reads retry on transient/429/418; auth never; mutating never (ADR-0012)."""
 
         def handler(_request: httpx.Request) -> httpx.Response:
             return httpx.Response(200, text="pong")
 
         transport, _ = mock_transport(handler)
-        assert transport._is_retryable(BinanceThNetworkError()) is True
-        assert transport._is_retryable(BinanceThAuthError()) is False
+        assert transport._is_retryable(BinanceThNetworkError(), mutating=False) is True
+        assert transport._is_retryable(BinanceThServerError(), mutating=False) is True
+        assert transport._is_retryable(BinanceThRateLimitError(), mutating=False) is True
+        assert transport._is_retryable(BinanceThIPBannedError(), mutating=False) is True
+        assert transport._is_retryable(BinanceThAuthError(), mutating=False) is False
+        # Mutating calls are never auto-retried, even on transient errors.
+        assert transport._is_retryable(BinanceThServerError(), mutating=True) is False
+        assert transport._is_retryable(BinanceThNetworkError(), mutating=True) is False
 
 
 class TestRedactionLogging:
