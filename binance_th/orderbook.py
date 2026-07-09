@@ -148,6 +148,7 @@ class ManagedOrderBook:
         deltas: AsyncIterator[DepthUpdateEvent],
         depth_provider: DepthProvider,
         limit: int = 1000,
+        on_close: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         self.symbol = symbol
         self._deltas = deltas
@@ -155,6 +156,7 @@ class ManagedOrderBook:
         self._book: LocalOrderBook | None = None
         self._task: asyncio.Task[None] | None = None
         self._synced = asyncio.Event()
+        self._on_close = on_close
 
     def start(self) -> None:
         """Launch the background sync task (idempotent)."""
@@ -191,10 +193,19 @@ class ManagedOrderBook:
         return self._book.asks_top(n) if self._book is not None else []
 
     async def aclose(self) -> None:
-        """Cancel the background sync task; idempotent."""
+        """Cancel the sync task, close the delta stream, and run ``on_close``; idempotent."""
         task = self._task
         self._task = None
         if task is not None:
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await task
+        # close the delta async generator so its finally-blocks (e.g. unsubscribe) run
+        aclose = getattr(self._deltas, "aclose", None)
+        if callable(aclose):
+            with contextlib.suppress(Exception):
+                await aclose()
+        on_close = self._on_close
+        self._on_close = None
+        if on_close is not None:
+            await on_close()
