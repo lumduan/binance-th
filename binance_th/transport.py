@@ -147,6 +147,11 @@ class Transport:
         return self._closed
 
     @property
+    def can_sign(self) -> bool:
+        """True if credentials for signed requests are configured."""
+        return self._can_sign
+
+    @property
     def _can_sign(self) -> bool:
         return self._signer is not None and self._config.api_key is not None
 

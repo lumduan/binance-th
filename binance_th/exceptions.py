@@ -396,6 +396,36 @@ class BinanceThWebSocketError(BinanceThError):
         super().__init__(message=message, **kwargs)
 
 
+class BinanceThOrderUnknownError(BinanceThError):
+    """Order execution status is UNKNOWN after a transient failure (ADR-0006).
+
+    Raised when a mutating order create hit a 5xx/timeout/network error and the
+    reconciliation query (by client order id) could not confirm the order. The
+    execution status is genuinely unknown — do not blindly resubmit.
+
+    Attributes:
+        client_order_id: The client order id used to reconcile.
+        symbol: The order's symbol.
+        resubmittable: True only when the reconciliation query positively confirmed
+            the order was NOT placed (safe to resubmit); False if still unknown.
+    """
+
+    def __init__(
+        self,
+        message: str = "Order execution status unknown",
+        *,
+        client_order_id: str | None = None,
+        symbol: str | None = None,
+        resubmittable: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the UNKNOWN-order error."""
+        super().__init__(message=message, **kwargs)
+        self.client_order_id: str | None = client_order_id
+        self.symbol: str | None = symbol
+        self.resubmittable: bool = resubmittable
+
+
 # HTTP status code to exception mapping
 HTTP_STATUS_MAP: dict[int, type[BinanceThAPIError]] = {
     400: BinanceThBadRequestError,
