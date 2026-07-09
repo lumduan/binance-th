@@ -7,10 +7,31 @@ import pytest
 
 from binance_th.config import BinanceThConfig
 from binance_th.timesync import TimeSync
-from binance_th.transport import Transport
+from binance_th.transport import (
+    NullRateLimiter,
+    NullRetryer,
+    RateLimiter,
+    Retryer,
+    Transport,
+)
 
 Handler = Callable[[httpx.Request], httpx.Response]
 TransportFactory = Callable[..., tuple[Transport, list[httpx.Request]]]
+
+
+class FakeTime:
+    """Controllable monotonic clock + recording async sleep for deterministic timing tests."""
+
+    def __init__(self, start: float = 1000.0) -> None:
+        self.now = start
+        self.sleeps: list[float] = []
+
+    def clock(self) -> float:
+        return self.now
+
+    async def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.now += seconds
 
 
 @pytest.fixture
@@ -43,6 +64,8 @@ async def mock_transport() -> AsyncIterator[TransportFactory]:
         *,
         config: BinanceThConfig | None = None,
         timesync: TimeSync | None = None,
+        limiter: RateLimiter | None = None,
+        retryer: Retryer | None = None,
     ) -> tuple[Transport, list[httpx.Request]]:
         captured: list[httpx.Request] = []
 
@@ -54,7 +77,15 @@ async def mock_transport() -> AsyncIterator[TransportFactory]:
         client = httpx.AsyncClient(
             transport=httpx.MockTransport(wrapped), base_url=cfg.rest_base_url
         )
-        transport = Transport(cfg, client=client, timesync=timesync)
+        # Default to no-op engines so unrelated tests stay hermetic and fast; M2
+        # tests opt into real engines with a FakeTime sleep.
+        transport = Transport(
+            cfg,
+            client=client,
+            timesync=timesync,
+            limiter=limiter or NullRateLimiter(),
+            retryer=retryer or NullRetryer(),
+        )
         created.append(transport)
         return transport, captured
 
