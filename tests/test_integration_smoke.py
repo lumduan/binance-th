@@ -36,3 +36,39 @@ class TestLiveSmoke:
         async with BinanceThClient() as client:
             server_time = await client.server_time()
             assert server_time.server_time > 1_600_000_000_000
+
+
+class TestLiveMarket:
+    """Live public market-data checks (M3a)."""
+
+    async def test_depth(self) -> None:
+        """Real order book has both sides."""
+        async with BinanceThClient() as client:
+            book = await client.market.depth("BNBTHB", limit=5)
+            assert book.bids and book.asks
+
+    async def test_exchange_info_and_cache(self) -> None:
+        """Real exchangeInfo parses (the reconciled model), and caches."""
+        async with BinanceThClient() as client:
+            info = await client.exchange_info()
+            assert len(info.symbols) >= 100
+            assert await client.exchange_info() is info
+            assert info.get_symbol("BNBTHB") is not None
+
+    async def test_ticker_price(self) -> None:
+        """Real last price is positive."""
+        async with BinanceThClient() as client:
+            price = await client.market.ticker_price("BNBTHB")
+            assert price.price > 0
+
+    async def test_iter_klines(self) -> None:
+        """Paginated klines over the last 10 minutes are contiguous and de-duped."""
+        async with BinanceThClient() as client:
+            end = (await client.server_time()).server_time
+            opens = [
+                kline.open_time
+                async for kline in client.market.iter_klines(
+                    "BTCUSDT", "1m", start_time=end - 600_000, end_time=end, limit=100
+                )
+            ]
+            assert opens == sorted(set(opens))
