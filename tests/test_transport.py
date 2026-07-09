@@ -63,13 +63,13 @@ class TestPublicRequests:
 
 
 class TestSignedRequests:
-    """Signed (enveloped) endpoints."""
+    """Signed endpoints (bare responses)."""
 
     async def test_signed_account_happy(self, mock_transport: TransportFactory) -> None:
         """A signed request carries the api-key header and a correct trailing signature."""
 
         def handler(_request: httpx.Request) -> httpx.Response:
-            return _json({"code": 0, "msg": "", "data": {"balances": []}})
+            return _json({"balances": []})  # bare (TH has no success envelope)
 
         cfg = BinanceThConfig(api_key="KEY", api_secret="SECRET")
         transport, captured = mock_transport(handler, config=cfg, timesync=_synced_ts())
@@ -141,7 +141,7 @@ class TestTimestampResync:
             calls["account"] += 1
             if calls["account"] == 1:
                 return _json({"code": -1021, "msg": "ts"}, status=400)
-            return _json({"code": 0, "msg": "", "data": {"ok": True}})
+            return _json({"ok": True})  # bare
 
         cfg = BinanceThConfig(api_key="K", api_secret="S")
         transport, _ = mock_transport(handler, config=cfg, timesync=_synced_ts())
@@ -197,8 +197,8 @@ class TestErrorMapping:
         assert exc.value.retry_after == 3
         assert exc.value.used_weight == 6000
 
-    async def test_envelope_error_on_200(self, mock_transport: TransportFactory) -> None:
-        """A 200 with a non-zero envelope code raises the mapped exception."""
+    async def test_explicit_envelope_unwrap_raises(self, mock_transport: TransportFactory) -> None:
+        """With opt-in envelope=True, a 200 body with a non-zero code raises (unwrap path)."""
 
         def handler(_request: httpx.Request) -> httpx.Response:
             return _json({"code": -1100, "msg": "bad param"})
@@ -206,7 +206,7 @@ class TestErrorMapping:
         cfg = BinanceThConfig(api_key="K", api_secret="S")
         transport, _ = mock_transport(handler, config=cfg, timesync=_synced_ts())
         with pytest.raises(BinanceThBadRequestError):
-            await transport.request("GET", "/api/v1/account", signed=True)
+            await transport.request("GET", "/api/v1/account", signed=True, envelope=True)
 
     async def test_5xx_non_json_body(self, mock_transport: TransportFactory) -> None:
         """A 5xx with a non-JSON body still maps to a server error."""
@@ -264,7 +264,7 @@ class TestRedactionLogging:
         """Signature, api-key, and listenKey are redacted from request/response logs."""
 
         def handler(_request: httpx.Request) -> httpx.Response:
-            return _json({"code": 0, "msg": "", "data": {"listenKey": "SECRETKEY"}})
+            return _json({"listenKey": "SECRETKEY"})  # bare listenKey response
 
         cfg = BinanceThConfig(
             api_key="SUPERKEYVALUE",

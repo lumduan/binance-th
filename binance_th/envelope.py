@@ -1,11 +1,11 @@
-"""Centralized response-envelope unwrapping (ADR-0002).
+"""Response-envelope unwrapping for opt-in callers (ADR-0002).
 
-Binance TH wraps **signed** responses as ``{"code":0,"msg":...,"timestamp":...,
-"data":...}`` where ``code == 0`` is success. Public market/system endpoints
-return **bare** payloads (a raw object/array — verified 2026-07-09; ``/ping``
-even returns non-JSON ``pong``). This module owns the single place that turns an
-enveloped payload into its ``data`` and routes a non-zero ``code`` to a typed
-error. Bare payloads never reach here — the caller passes ``envelope=False``.
+Verified 2026-07-09: Binance TH returns **bare** bodies on every probed endpoint
+(errors are ``{code,msg}`` + HTTP 4xx), so the transport default is bare and this
+module is **not** on the default path. It remains available for any caller that
+passes ``envelope=True`` to unwrap a ``{"code":0,"msg":...,"data":...}`` body —
+asserting ``code == 0`` and returning ``data``, or routing a non-zero ``code`` to
+a typed error. Signed shapes stay ⚠ ASSUMED until a credentialed soak.
 """
 
 from typing import Any

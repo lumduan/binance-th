@@ -2,9 +2,11 @@
 
 Owns one :class:`httpx.AsyncClient` plus the signer and the server-time offset,
 and runs every request through a single pipeline: build → sign → send →
-status-map → parse → unwrap. Public reads are bare; signed reads are enveloped
-(verified 2026-07-09). The transport is **model-agnostic** — it returns raw
-parsed JSON (or text); callers apply Pydantic models.
+status-map → parse → (optional) unwrap. **All** Binance TH responses are bare
+(verified 2026-07-09; errors are `{code,msg}` + HTTP 4xx), so the default is
+bare for signed and unsigned alike; the ``unwrap`` path stays available for any
+endpoint that opts into ``envelope=True``. The transport is **model-agnostic** —
+it returns raw parsed JSON (or text); callers apply Pydantic models.
 
 The rate limiter (M2, ADR-0005) and retry/backoff engine (M2, ADR-0012) plug in
 via the :class:`RateLimiter` and :class:`Retryer` protocols; M1 ships no-op
@@ -163,11 +165,12 @@ class Transport:
     ) -> Any:
         """Send a request and return raw JSON/text.
 
-        ``envelope=None`` defaults to bare for unsigned and enveloped for signed
-        (matching the live API). ``parse_json=False`` returns ``response.text``
-        (for ``/ping``). ``weight``/``mutating`` feed the M2 limiter seam.
+        ``envelope=None`` defaults to **bare** (Binance TH has no success envelope);
+        pass ``envelope=True`` to unwrap a ``{code,msg,data}`` body. ``parse_json=False``
+        returns ``response.text`` (for ``/ping``). ``weight``/``mutating`` feed the M2
+        limiter seam.
         """
-        resolved_envelope = signed if envelope is None else envelope
+        resolved_envelope = bool(envelope)
         if signed and not self._can_sign:
             raise BinanceThAuthError("API credentials are required for signed endpoints")
 
