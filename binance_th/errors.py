@@ -43,6 +43,7 @@ ENVELOPE_CODE_MAP: dict[int, type[BinanceThAPIError]] = {
     -1102: BinanceThBadRequestError,  # mandatory param missing/empty
     -1013: BinanceThBadRequestError,  # filter failure (PRICE_FILTER, LOT_SIZE, ...)
     -1121: BinanceThBadRequestError,  # invalid symbol
+    -2013: BinanceThBadRequestError,  # order does not exist (used in UNKNOWN reconciliation)
 }
 
 _USED_WEIGHT_HEADER = "x-mbx-used-weight-1m"

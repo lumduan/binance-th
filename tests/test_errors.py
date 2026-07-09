@@ -49,8 +49,9 @@ class TestMapException:
         assert ENVELOPE_CODE_MAP[-1000] is BinanceThBadRequestError
 
     def test_generic_1000_maps_to_bad_request(self) -> None:
-        """TH's generic -1000 (e.g. symbol not served by an endpoint) is a bad request."""
+        """TH's generic -1000 and order-not-found -2013 map to bad request."""
         assert map_exception(400, -1000) is BinanceThBadRequestError
+        assert map_exception(400, -2013) is BinanceThBadRequestError
 
 
 class TestRaiseForHttpStatus:
