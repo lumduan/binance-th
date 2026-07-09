@@ -28,8 +28,8 @@ coverage.xml
 .ruff_cache/
 .uff_cache/
 
-# AI tools
-.claude/
+# AI tools — track shared agent context (.claude/knowledge, etc.); ignore only machine-local settings
+.claude/settings.local.json
 
 # Environment
 .env
