@@ -8,16 +8,21 @@ bootstrap everything else — :meth:`ping` and :meth:`server_time`; resource
 clients (market, account, orders) arrive in M3.
 """
 
+import asyncio
 from types import TracebackType
 from typing import Self
 
 from binance_th.config import BinanceThConfig
-from binance_th.models.base import ServerTime
+from binance_th.market import MarketClient
+from binance_th.models.base import ExchangeInfo, ServerTime, SymbolTypeInfo
 from binance_th.transport import Transport
 
 __all__ = ["BinanceThClient"]
 
 PING_PATH = "/api/v1/ping"
+EXCHANGE_INFO_PATH = "/api/v1/exchangeInfo"
+SYMBOL_TYPE_PATH = "/api/v1/symbolType"
+EXCHANGE_INFO_WEIGHT = 10
 
 
 class BinanceThClient:
@@ -32,6 +37,9 @@ class BinanceThClient:
         """Build from ``config`` (or env/``.env`` defaults); ``transport`` is injectable for tests."""
         self._config = config or BinanceThConfig()
         self._transport = transport or Transport(self._config)
+        self.market = MarketClient(self._transport)
+        self._exchange_info: ExchangeInfo | None = None
+        self._exchange_info_lock = asyncio.Lock()
 
     async def __aenter__(self) -> Self:
         return self
@@ -67,3 +75,31 @@ class BinanceThClient:
     async def server_time(self) -> ServerTime:
         """``GET /api/v1/time`` — server time; also refreshes the signing offset."""
         return await self._transport.sync_time()
+
+    async def exchange_info(self, *, force: bool = False) -> ExchangeInfo:
+        """``GET /api/v1/exchangeInfo`` — cached; reseeds the rate limiter on fetch.
+
+        The first call (or ``force=True``) fetches and caches the exchange info and
+        adopts its authoritative rate limits into the limiter; later calls return the
+        cached instance without a request.
+        """
+        if self._exchange_info is not None and not force:
+            return self._exchange_info
+        async with self._exchange_info_lock:
+            if self._exchange_info is not None and not force:
+                return self._exchange_info
+            raw = await self._transport.request(
+                "GET", EXCHANGE_INFO_PATH, envelope=False, weight=EXCHANGE_INFO_WEIGHT
+            )
+            info = ExchangeInfo(**raw)
+            self._exchange_info = info
+            self._transport.reseed_rate_limits(info.rate_limits)
+            return info
+
+    async def symbol_types(self, *, symbol: str | None = None) -> list[SymbolTypeInfo]:
+        """``GET /api/v1/symbolType`` — GLOBAL/SITE type per symbol (always an array)."""
+        params = {"symbol": symbol} if symbol is not None else {}
+        raw = await self._transport.request(
+            "GET", SYMBOL_TYPE_PATH, params=params, envelope=False, weight=1
+        )
+        return [SymbolTypeInfo(**item) for item in raw]

@@ -70,7 +70,9 @@ class Trade(ResponseModel):
     id: int = Field(description="Trade ID")
     price: Decimal = Field(description="Trade price")
     qty: Decimal = Field(description="Trade quantity")
-    quote_qty: Decimal = Field(alias="quoteQty", description="Quote asset quantity")
+    quote_qty: Decimal | None = Field(
+        default=None, alias="quoteQty", description="Quote asset quantity (null on SITE symbols)"
+    )
     time: int = Field(description="Trade timestamp in milliseconds")
     is_buyer_maker: bool = Field(
         alias="isBuyerMaker",
@@ -157,16 +159,29 @@ class Ticker24hr(ResponseModel):
         alias="weightedAvgPrice",
         description="Weighted average price",
     )
-    prev_close_price: Decimal = Field(
+    prev_close_price: Decimal | None = Field(
+        default=None,
         alias="prevClosePrice",
-        description="Previous close price",
+        description="Previous close price (null on some SITE symbols)",
     )
     last_price: Decimal = Field(alias="lastPrice", description="Last traded price")
-    last_qty: Decimal = Field(alias="lastQty", description="Last traded quantity")
-    bid_price: Decimal = Field(alias="bidPrice", description="Best bid price")
-    bid_qty: Decimal = Field(alias="bidQty", description="Best bid quantity")
-    ask_price: Decimal = Field(alias="askPrice", description="Best ask price")
-    ask_qty: Decimal = Field(alias="askQty", description="Best ask quantity")
+    last_qty: Decimal | None = Field(
+        default=None,
+        alias="lastQty",
+        description="Last traded quantity (null on some SITE symbols)",
+    )
+    bid_price: Decimal | None = Field(
+        default=None, alias="bidPrice", description="Best bid price (null on some SITE symbols)"
+    )
+    bid_qty: Decimal | None = Field(
+        default=None, alias="bidQty", description="Best bid quantity (null on some SITE symbols)"
+    )
+    ask_price: Decimal | None = Field(
+        default=None, alias="askPrice", description="Best ask price (null on some SITE symbols)"
+    )
+    ask_qty: Decimal | None = Field(
+        default=None, alias="askQty", description="Best ask quantity (null on some SITE symbols)"
+    )
     open_price: Decimal = Field(alias="openPrice", description="Open price")
     high_price: Decimal = Field(alias="highPrice", description="High price")
     low_price: Decimal = Field(alias="lowPrice", description="Low price")
@@ -202,3 +217,61 @@ class BookTicker(ResponseModel):
     bid_qty: Decimal = Field(alias="bidQty", description="Best bid quantity")
     ask_price: Decimal = Field(alias="askPrice", description="Best ask price")
     ask_qty: Decimal = Field(alias="askQty", description="Best ask quantity")
+
+
+class ReferencePrice(ResponseModel):
+    """Reference price for a GLOBAL symbol.
+
+    Response from GET /api/v1/referencePrice (TH-only). ``symbol`` is required and
+    only GLOBAL symbols are served — SITE/THB symbols return HTTP 400.
+    """
+
+    symbol: str = Field(description="Trading pair symbol")
+    reference_price: Decimal = Field(alias="referencePrice", description="Reference price")
+    timestamp: int = Field(description="Server timestamp in milliseconds")
+
+
+class ExecutionRule(ResponseModel):
+    """A single execution rule (e.g. PRICE_RANGE) for a symbol.
+
+    Part of GET /api/v1/executionRules. The PRICE_RANGE multipliers may be null.
+    """
+
+    rule_type: str = Field(alias="ruleType", description="Rule type, e.g. PRICE_RANGE")
+    bid_multiplier_up: Decimal | None = Field(
+        default=None, alias="bidMultiplierUp", description="Max bid price multiplier"
+    )
+    bid_multiplier_down: Decimal | None = Field(
+        default=None, alias="bidMultiplierDown", description="Min bid price multiplier"
+    )
+    ask_multiplier_up: Decimal | None = Field(
+        default=None, alias="askMultiplierUp", description="Max ask price multiplier"
+    )
+    ask_multiplier_down: Decimal | None = Field(
+        default=None, alias="askMultiplierDown", description="Min ask price multiplier"
+    )
+
+
+class SymbolExecutionRules(ResponseModel):
+    """Execution rules for one symbol."""
+
+    symbol: str = Field(description="Trading pair symbol")
+    rules: list[ExecutionRule] = Field(description="Execution rules for the symbol")
+
+
+class ExecutionRules(ResponseModel):
+    """Execution rules response.
+
+    Response from GET /api/v1/executionRules (TH-only). Contains GLOBAL symbols only.
+    """
+
+    symbol_rules: list[SymbolExecutionRules] = Field(
+        alias="symbolRules", description="Per-symbol execution rules"
+    )
+
+    def get_symbol(self, symbol: str) -> SymbolExecutionRules | None:
+        """Get execution rules for a symbol, or None if absent."""
+        for entry in self.symbol_rules:
+            if entry.symbol == symbol:
+                return entry
+        return None

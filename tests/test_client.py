@@ -6,8 +6,51 @@ import httpx
 
 from binance_th import BinanceThClient
 from binance_th.config import BinanceThConfig
+from binance_th.models.enums import RateLimitInterval, RateLimitType, SymbolType
+from binance_th.ratelimit import DualWindowRateLimiter
 
 from .conftest import TransportFactory
+
+
+def _exchange_info_body(*, weight_limit: int = 6000) -> dict[str, object]:
+    """A trimmed real exchangeInfo body (one SITE symbol)."""
+    return {
+        "timezone": "UTC",
+        "serverTime": 1700000000000,
+        "rateLimits": [
+            {
+                "rateLimitType": "REQUEST_WEIGHT",
+                "interval": "MINUTE",
+                "intervalNum": 1,
+                "limit": weight_limit,
+            }
+        ],
+        "exchangeFilters": [],
+        "symbols": [
+            {
+                "symbol": "BNBTHB",
+                "test": 0,
+                "status": "TRADING",
+                "baseAsset": "BNB",
+                "baseAssetPrecision": 8,
+                "quoteAsset": "THB",
+                "quotePrecision": 6,
+                "quoteAssetPrecision": 8,
+                "baseCommissionPrecision": 2,
+                "quoteCommissionPrecision": 0,
+                "type": "SITE",
+                "filters": [
+                    {
+                        "filterType": "PRICE_FILTER",
+                        "minPrice": "0.01",
+                        "maxPrice": "1000000.0",
+                        "tickSize": "0.01",
+                    }
+                ],
+                "orderTypes": ["LIMIT", "MARKET"],
+            }
+        ],
+    }
 
 
 class TestBinanceThClient:
@@ -66,3 +109,79 @@ class TestBinanceThClient:
             async with BinanceThClient(BinanceThConfig()) as client:
                 assert client.is_closed is False
             assert client.is_closed is True
+
+
+class TestExchangeInfoAndSymbolTypes:
+    """exchangeInfo caching + limiter reseed, and symbolType (M3a)."""
+
+    async def test_parses_and_caches(self, mock_transport: TransportFactory) -> None:
+        """exchange_info parses the live shape and caches (one HTTP call)."""
+
+        def handler(_request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=_exchange_info_body())
+
+        transport, captured = mock_transport(handler)
+        client = BinanceThClient(transport=transport)
+        first = await client.exchange_info()
+        second = await client.exchange_info()
+        assert first is second
+        assert len(captured) == 1
+        symbol = first.get_symbol("BNBTHB")
+        assert symbol is not None
+        assert symbol.symbol_type == SymbolType.SITE
+
+    async def test_force_refetches(self, mock_transport: TransportFactory) -> None:
+        """force=True re-fetches."""
+
+        def handler(_request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=_exchange_info_body())
+
+        transport, captured = mock_transport(handler)
+        client = BinanceThClient(transport=transport)
+        await client.exchange_info()
+        await client.exchange_info(force=True)
+        assert len(captured) == 2
+
+    async def test_reseeds_limiter(self, mock_transport: TransportFactory) -> None:
+        """The limiter adopts the exchangeInfo rate limits."""
+        limiter = DualWindowRateLimiter.from_defaults()
+
+        def handler(_request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=_exchange_info_body(weight_limit=12000))
+
+        transport, _ = mock_transport(handler, limiter=limiter)
+        await BinanceThClient(transport=transport).exchange_info()
+        window = limiter._windows[(RateLimitType.REQUEST_WEIGHT, RateLimitInterval.MINUTE, 1)]
+        assert window.limit == 12000
+
+    async def test_null_limiter_reseed_noop(self, mock_transport: TransportFactory) -> None:
+        """With the default NullRateLimiter, reseed is a harmless no-op."""
+
+        def handler(_request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=_exchange_info_body())
+
+        transport, _ = mock_transport(handler)  # NullRateLimiter default
+        info = await BinanceThClient(transport=transport).exchange_info()
+        assert info.timezone == "UTC"
+
+    async def test_symbol_types(self, mock_transport: TransportFactory) -> None:
+        """symbol_types returns a list; the symbol filter is forwarded when given."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if "symbol" in request.url.params:
+                assert request.url.params["symbol"] == "BNBTHB"
+                return httpx.Response(200, json=[{"symbol": "BNBTHB", "type": "SITE"}])
+            return httpx.Response(
+                200,
+                json=[
+                    {"symbol": "BNBTHB", "type": "SITE"},
+                    {"symbol": "BTCUSDT", "type": "GLOBAL"},
+                ],
+            )
+
+        client = BinanceThClient(transport=mock_transport(handler)[0])
+        types = await client.symbol_types()
+        assert len(types) == 2
+        assert types[0].symbol_type == SymbolType.SITE
+        one = await client.symbol_types(symbol="BNBTHB")
+        assert len(one) == 1 and one[0].symbol == "BNBTHB"

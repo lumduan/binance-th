@@ -19,6 +19,7 @@ from binance_th.models.enums import (
     RateLimitInterval,
     RateLimitType,
     SymbolStatus,
+    SymbolType,
 )
 
 
@@ -190,6 +191,12 @@ class SymbolInfo(ResponseModel):
 
     symbol: str = Field(description="Trading pair symbol (e.g., BTCUSDT)")
     status: SymbolStatus = Field(description="Trading status")
+    symbol_type: SymbolType | None = Field(
+        default=None,
+        alias="type",
+        description="TH symbol type: GLOBAL or SITE (ADR-0011)",
+    )
+    test: int | None = Field(default=None, description="1 if a test symbol")
     base_asset: str = Field(alias="baseAsset", description="Base asset (e.g., BTC)")
     base_asset_precision: int = Field(
         alias="baseAssetPrecision",
@@ -201,22 +208,40 @@ class SymbolInfo(ResponseModel):
         alias="quoteAssetPrecision",
         description="Quote asset decimal precision",
     )
+    base_commission_precision: int | None = Field(
+        default=None,
+        alias="baseCommissionPrecision",
+        description="Base asset commission precision",
+    )
+    quote_commission_precision: int | None = Field(
+        default=None,
+        alias="quoteCommissionPrecision",
+        description="Quote asset commission precision",
+    )
     order_types: list[str] = Field(
         alias="orderTypes",
         description="Allowed order types for this symbol",
     )
-    iceberg_allowed: bool = Field(alias="icebergAllowed", description="Iceberg orders allowed")
-    oco_allowed: bool = Field(alias="ocoAllowed", description="OCO orders allowed")
-    is_spot_trading_allowed: bool = Field(
+    filters: list[SymbolFilter] = Field(description="Trading filters/constraints")
+    # Absent on live Binance TH exchangeInfo (verified 2026-07-09); kept optional for
+    # forward-compatibility and parity with the global API.
+    iceberg_allowed: bool | None = Field(
+        default=None, alias="icebergAllowed", description="Iceberg orders allowed"
+    )
+    oco_allowed: bool | None = Field(
+        default=None, alias="ocoAllowed", description="OCO orders allowed"
+    )
+    is_spot_trading_allowed: bool | None = Field(
+        default=None,
         alias="isSpotTradingAllowed",
         description="Spot trading allowed",
     )
-    is_margin_trading_allowed: bool = Field(
+    is_margin_trading_allowed: bool | None = Field(
+        default=None,
         alias="isMarginTradingAllowed",
         description="Margin trading allowed",
     )
-    filters: list[SymbolFilter] = Field(description="Trading filters/constraints")
-    permissions: list[str] = Field(description="Trading permissions")
+    permissions: list[str] | None = Field(default=None, description="Trading permissions")
 
     def get_filter(self, filter_type: FilterType) -> SymbolFilter | None:
         """Get a specific filter by type.

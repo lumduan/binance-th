@@ -108,9 +108,10 @@ pre-existing build-plan doc) that this suite resolved:
     **not** return them (it returns `test`, `baseCommissionPrecision`, `quoteCommissionPrecision`,
     `type`, `filters`, `orderTypes`); the observed filter set is `PRICE_FILTER`, `PERCENT_PRICE`,
     `LOT_SIZE`, `MIN_NOTIONAL`, `MAX_NUM_ORDERS` (no `MARKET_LOT_SIZE`/`PRICE_RANGE`). So
-    `ExchangeInfo(**live_response)` will fail today. **Fix in M3 (WBS-M3-04)**: reconcile
-    `SymbolInfo`/`ExchangeInfo` to the real TH shape before wiring the exchangeInfo cache. Not fixed
-    in M1 (M1 does not parse exchangeInfo).
+    `ExchangeInfo(**live_response)` would fail. **✓ Fixed in M3a:** `SymbolInfo` reconciled
+    (the five global-only fields → `Optional`; `test`/`type`/`baseCommissionPrecision`/
+    `quoteCommissionPrecision` added), so `ExchangeInfo(**live)` now parses; `client.exchange_info()`
+    caches it and reseeds the rate limiter.
 
 ## Deferred tooling (recorded, intentionally not done in M0)
 

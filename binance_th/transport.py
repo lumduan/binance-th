@@ -13,7 +13,7 @@ orthogonal to the retryer.
 """
 
 import logging
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from typing import Any, Protocol
 
 import httpx
@@ -29,7 +29,7 @@ from binance_th.exceptions import (
     BinanceThServerError,
     BinanceThTimeoutError,
 )
-from binance_th.models.base import ServerTime
+from binance_th.models.base import RateLimit, ServerTime
 from binance_th.ratelimit import DualWindowRateLimiter
 from binance_th.redaction import redact_headers, redact_params
 from binance_th.retry import BackoffRetryer
@@ -49,6 +49,8 @@ class RateLimiter(Protocol):
     async def acquire(self, weight: int, *, mutating: bool) -> None: ...
 
     def update_from_headers(self, headers: Mapping[str, str]) -> None: ...
+
+    def reseed(self, rate_limits: Sequence[RateLimit]) -> None: ...
 
 
 class Retryer(Protocol):
@@ -71,6 +73,9 @@ class NullRateLimiter:
 
     def update_from_headers(self, headers: Mapping[str, str]) -> None:
         """Ignore server usage headers."""
+
+    def reseed(self, rate_limits: Sequence[RateLimit]) -> None:
+        """Ignore authoritative limits; the null limiter never paces."""
 
 
 class NullRetryer:
@@ -217,6 +222,10 @@ class Transport:
         if not self._closed:
             await self._client.aclose()
             self._closed = True
+
+    def reseed_rate_limits(self, rate_limits: Sequence[RateLimit]) -> None:
+        """Adopt authoritative rate limits (e.g. from exchangeInfo) into the limiter."""
+        self._limiter.reseed(rate_limits)
 
     async def _execute(
         self,
