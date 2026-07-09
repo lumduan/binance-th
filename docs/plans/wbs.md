@@ -50,13 +50,13 @@ time. Items are the unit of PR; exit criteria are testable.
 | WBS-M4-03 | Pre-trade validator (filters + PRICE_RANGE, ROUND_DOWN) | M3-04 | 0009 | FR-ORD-01, FR-MKT-03 | M | sub-tick floored; below-notional rejected locally |
 | WBS-M4-04 | Order UNKNOWN reconciliation | M4-01, M4-02, M1-06 | 0006, 0013 | FR-ORD-02 | M | injected 503 → query-by-clientId, **no** duplicate |
 
-## M5 — WS market streams + order book (`0.6.0`)
+## M5 — WS market streams + order book (`0.6.0`) — **done, live-verified 2026-07-09**
 
 | ID | Title | Deps | ADRs | FRs | Sz | Exit criteria |
 |----|-------|------|------|-----|----|---------------|
-| WBS-M5-01 | WS client + stream router (`?streams=`, GLOBAL/SITE) | M1-01 | 0014, 0015 | FR-WSS-01, FR-WSS-03 | L | 2-symbol multiplex; routing is config data |
-| WBS-M5-02 | Verify GLOBAL/SITE topology vs live console | M5-01 | 0011, 0014 | FR-WSS-03 | S | single-host default confirmed or flipped (config-only) |
-| WBS-M5-03 | Local order-book sync engine | M5-01, M3-01 | 0007 | FR-WSS-02 | L | update-id gap → re-snapshot; replay == reference book |
+| WBS-M5-01 ✅ | WS client + stream router (`?streams=`, GLOBAL/SITE) | M1-01 | 0014, 0015 | FR-WSS-01, FR-WSS-03 | L | 2-symbol multiplex; routing is config data |
+| WBS-M5-02 ✅ | Verify GLOBAL/SITE topology vs live console | M5-01 | 0011, 0014 | FR-WSS-03 | S | **FLIPPED to dual-host** (`/gstream`+`/nstream`), config-only; single-host is the WSA host (no market push) |
+| WBS-M5-03 ✅ | Local order-book sync engine | M5-01, M3-01 | 0007 | FR-WSS-02 | L | update-id gap → re-snapshot; replay == reference book |
 
 ## M6 — User-data stream (`0.7.0`)
 
@@ -83,7 +83,9 @@ pre-existing build-plan doc) that this suite resolved:
 
 1. **WS host/topology conflict** — config's two hosts (`gstream`/`nstream`) vs the docs' single
    `?streams=` host → **[ADR-0014](./adr/ADR-0014-stream-routing-and-base-url-topology.md)**: routing is
-   config data behind a resolver; default to single-host, verify at M5 (WBS-M5-02).
+   config data behind a resolver. **Resolved at M5 (WBS-M5-02, 2026-07-09): FLIPPED to dual-host** —
+   the single-host `nbstream/.../w3w/wsa/stream` ACKs SUBSCRIBE but pushes no market data (WSA host);
+   GLOBAL streams on `/gstream`, SITE on `/nstream`.
 2. **WSA vs `/api/v1/listenKey`** — the `/w3w/wsa/` path hints at a WSA-native auth →
    **[ADR-0008](./adr/ADR-0008-listenkey-lifecycle-and-manager.md)**: REST listenKey behind an
    injectable manager so WSA slots in.
