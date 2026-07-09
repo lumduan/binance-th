@@ -112,6 +112,12 @@ pre-existing build-plan doc) that this suite resolved:
     (the five global-only fields → `Optional`; `test`/`type`/`baseCommissionPrecision`/
     `quoteCommissionPrecision` added), so `ExchangeInfo(**live)` now parses; `client.exchange_info()`
     caches it and reseeds the rate limiter.
+11. **M3 split into M3a + M3b.** **✓ M3a (merged):** public `client.market.*` + `exchange_info`
+    (WBS-M3-01/03/04). **✓ M3b:** signed `client.account.*`/`client.wallet.*` **reads** (accountV2,
+    userTrades + pagination, tradeFee, deposit address/history + pagination, withdraw history) +
+    the signed→bare transport flip (WBS-M3-02, part of M3-03). **Deferred:** wallet **writes**
+    (`withdraw`, `sub_account_transfer` — money-movers) to a later gated milestone. **⚠ ASSUMED:** all
+    signed shapes are mock-tested only (no credentials) — reconcile in a live soak.
 
 ## Deferred tooling (recorded, intentionally not done in M0)
 

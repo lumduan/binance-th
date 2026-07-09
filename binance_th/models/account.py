@@ -9,7 +9,7 @@ from decimal import Decimal
 from pydantic import Field
 
 from binance_th.models.base import ResponseModel
-from binance_th.models.enums import DepositStatus, SymbolType, WithdrawStatus
+from binance_th.models.enums import SymbolType
 
 
 class Balance(ResponseModel):
@@ -91,7 +91,11 @@ class UserTrade(ResponseModel):
     order_id: int = Field(alias="orderId", description="Order ID")
     price: Decimal = Field(description="Trade price")
     qty: Decimal = Field(description="Trade quantity")
-    quote_qty: Decimal = Field(alias="quoteQty", description="Quote quantity")
+    quote_qty: Decimal | None = Field(
+        default=None,
+        alias="quoteQty",
+        description="Quote quantity (⚠ may be null on SITE; unverified)",
+    )
     commission: Decimal = Field(description="Commission amount")
     commission_asset: str = Field(alias="commissionAsset", description="Commission asset")
     time: int = Field(description="Trade timestamp in milliseconds")
@@ -125,8 +129,10 @@ class DepositAddress(ResponseModel):
 
     address: str = Field(description="Deposit address")
     coin: str = Field(description="Coin symbol")
-    tag: str = Field(description="Address tag (memo) if required")
-    url: str = Field(description="Blockchain explorer URL")
+    tag: str | None = Field(
+        default=None, description="Address tag (memo); absent for non-memo coins"
+    )
+    url: str | None = Field(default=None, description="Blockchain explorer URL (⚠ unverified)")
 
 
 class DepositRecord(ResponseModel):
@@ -138,10 +144,14 @@ class DepositRecord(ResponseModel):
     amount: Decimal = Field(description="Deposit amount")
     coin: str = Field(description="Coin symbol")
     network: str = Field(description="Blockchain network")
-    status: DepositStatus = Field(description="Deposit status")
+    status: int = Field(description="Deposit status code (compare to DepositStatus)")
     address: str = Field(description="Deposit address")
-    address_tag: str = Field(alias="addressTag", description="Address tag if any")
-    tx_id: str = Field(alias="txId", description="Transaction ID")
+    address_tag: str | None = Field(
+        default=None, alias="addressTag", description="Address tag if any"
+    )
+    tx_id: str | None = Field(
+        default=None, alias="txId", description="Transaction ID (absent while pending)"
+    )
     insert_time: int = Field(alias="insertTime", description="Deposit request time")
     transfer_type: int = Field(alias="transferType", description="Transfer type")
     confirm_times: str = Field(alias="confirmTimes", description="Confirmation count")
@@ -174,9 +184,11 @@ class WithdrawRecord(ResponseModel):
     )
     network: str = Field(description="Blockchain network")
     transfer_type: int = Field(alias="transferType", description="Transfer type")
-    status: WithdrawStatus = Field(description="Withdrawal status")
+    status: int = Field(description="Withdrawal status code (compare to WithdrawStatus)")
     transaction_fee: Decimal = Field(alias="transactionFee", description="Transaction fee")
-    tx_id: str = Field(alias="txId", description="Transaction ID")
+    tx_id: str | None = Field(
+        default=None, alias="txId", description="Transaction ID (absent while processing)"
+    )
 
 
 class SubAccountTransfer(ResponseModel):
