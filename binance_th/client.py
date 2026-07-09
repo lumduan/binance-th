@@ -12,10 +12,12 @@ import asyncio
 from types import TracebackType
 from typing import Self
 
+from binance_th.account import AccountClient
 from binance_th.config import BinanceThConfig
 from binance_th.market import MarketClient
 from binance_th.models.base import ExchangeInfo, ServerTime, SymbolTypeInfo
 from binance_th.transport import Transport
+from binance_th.wallet import WalletClient
 
 __all__ = ["BinanceThClient"]
 
@@ -38,6 +40,8 @@ class BinanceThClient:
         self._config = config or BinanceThConfig()
         self._transport = transport or Transport(self._config)
         self.market = MarketClient(self._transport)
+        self.account = AccountClient(self._transport)
+        self.wallet = WalletClient(self._transport)
         self._exchange_info: ExchangeInfo | None = None
         self._exchange_info_lock = asyncio.Lock()
 

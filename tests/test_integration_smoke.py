@@ -13,6 +13,7 @@ import os
 import pytest
 
 from binance_th import BinanceThClient
+from binance_th.config import BinanceThConfig
 
 pytestmark = [
     pytest.mark.integration,
@@ -72,3 +73,21 @@ class TestLiveMarket:
                 )
             ]
             assert opens == sorted(set(opens))
+
+
+class TestLiveSigned:
+    """Credential-gated signed checks — run only with real keys AND BINANCE_TH_LIVE=1.
+
+    Skipped when no credentials are configured; ready to become the M3b signed soak.
+    """
+
+    pytestmark = pytest.mark.skipif(
+        not BinanceThConfig().has_credentials(),
+        reason="set BINANCE_TH_API_KEY / BINANCE_TH_API_SECRET to run signed live checks",
+    )
+
+    async def test_account(self) -> None:
+        """Real accountV2 returns balances (parses the reconciled model)."""
+        async with BinanceThClient() as client:
+            info = await client.account.account()
+            assert info.balances is not None
