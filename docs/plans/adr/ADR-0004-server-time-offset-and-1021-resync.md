@@ -8,11 +8,13 @@
 
 Every SIGNED request carries a millisecond `timestamp`, and the server rejects any request whose
 `timestamp` falls outside `recvWindow` of **server** time with error
-`-1021 Timestamp for this request is outside of the recvWindow` (⚠ ASSUMED code, consistent with
-Binance global and the Phase-1 `BinanceThAuthError` docstring). Client clocks drift — a laptop a few
-seconds fast will have every signed call rejected. The config already exposes `recv_window`
-(default 5000 ms, `le=60000`; `binance_th/config.py:99-104`) and a `ServerTime` model wraps
-`GET /api/v1/time` (`binance_th/models/base.py:53-59`), but nothing computes or applies an offset.
+`-1021 Timestamp for this request is outside of the recvWindow` (⚠ ASSUMED code — needs a signed call
+to observe; consistent with Binance global and the Phase-1 `BinanceThAuthError` docstring). Client
+clocks drift — a laptop a few seconds fast will have every signed call rejected. The config already
+exposes `recv_window` (default 5000 ms, `le=60000`; `binance_th/config.py:99-104`) and a `ServerTime`
+model wraps `GET /api/v1/time` (`binance_th/models/base.py:53-59`), but nothing computes or applies
+an offset. ✓ VERIFIED (2026-07-09, live probe): `GET /api/v1/time` returns the **bare** body
+`{"serverTime":<ms>}` (no envelope), so the offset manager reads `serverTime` directly.
 
 ## Decision
 
