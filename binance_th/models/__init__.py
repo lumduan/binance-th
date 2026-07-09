@@ -70,22 +70,37 @@ from binance_th.models.orders import (
     OrderRequest,
     QueryOrderRequest,
 )
+from binance_th.models.stream import (
+    AggTradeEvent,
+    BookTickerEvent,
+    DepthUpdateEvent,
+    KlineData,
+    KlineEvent,
+    StreamMessage,
+    TickerEvent,
+    TradeEvent,
+)
 
 __all__ = [
     "AccountInfo",
+    "AggTradeEvent",
     "AggregateTrade",
     # Account models
     "Balance",
     "BookTicker",
+    "BookTickerEvent",
     "CancelOrderRequest",
     "DepositAddress",
     "DepositRecord",
     "DepositStatus",
+    "DepthUpdateEvent",
     "ExchangeInfo",
     "ExecutionRule",
     "ExecutionRules",
     "FilterType",
     "Kline",
+    "KlineData",
+    "KlineEvent",
     "KlineInterval",
     "ListenKey",
     # Order models
@@ -108,6 +123,7 @@ __all__ = [
     # Base models
     "ResponseModel",
     "ServerTime",
+    "StreamMessage",
     "SubAccountTransfer",
     "SymbolExecutionRules",
     "SymbolFilter",
@@ -116,8 +132,10 @@ __all__ = [
     "SymbolType",
     "SymbolTypeInfo",
     "Ticker24hr",
+    "TickerEvent",
     "TimeInForce",
     "Trade",
+    "TradeEvent",
     "TradeFee",
     "UserTrade",
     "WithdrawRecord",
