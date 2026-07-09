@@ -6,18 +6,20 @@
 
 ## Context
 
-Binance Thailand enforces per-IP request limits and per-account order limits. ⚠ ASSUMED (verify at
-implementation): the request weight is bounded by **two simultaneous windows** — roughly **1000
-weight / 10 s** and **6000 weight / 60 s** — and order placement is bounded by a separate
-per-account order count. The server reports live usage in `X-MBX-USED-WEIGHT-(intervalNum)(intervalLetter)`
-headers and order usage in `X-MBX-ORDER-COUNT-*`; exceeding a limit returns **429**, and continuing
+Binance Thailand enforces per-IP request limits and per-account order limits. ✓ VERIFIED (2026-07-09,
+live `GET /api/v1/exchangeInfo`): `rateLimits` are `REQUEST_WEIGHT` **6000 / 1 min**, `ORDERS`
+**6000 / 1 min**, and `ORDERS` **1000 / 10 s** — one weight window plus two order windows; **no
+`RAW_REQUESTS` window** was advertised. The server reports live usage in the `x-mbx-used-weight-1m`
+header (confirmed on every response) and order usage in `X-MBX-ORDER-COUNT-*`; exceeding a limit
+returns **429**, and continuing
 after a 429 escalates to an IP ban **418** with a `Retry-After`. The Phase-1 layer already models the
 shapes: `RateLimitType` (`REQUEST_WEIGHT`, `ORDERS`, `RAW_REQUESTS`) and `RateLimitInterval`
 (`binance_th/models/enums.py:112-135`), the `RateLimit` model (`binance_th/models/base.py:73-85`),
 and `BinanceThRateLimitError`/`BinanceThIPBannedError` carrying `retry_after`/`used_weight`
 (`binance_th/exceptions.py:111-181`). What is missing is the pacing engine.
 
-Because the exact numbers are unverified and can change, hardcoding them is fragile.
+Because these limits can change server-side, hardcoding them is fragile — the live values above are a
+snapshot, not a contract.
 
 ## Decision
 

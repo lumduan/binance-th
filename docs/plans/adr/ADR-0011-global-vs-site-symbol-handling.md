@@ -14,10 +14,11 @@ enum (`GLOBAL`/`SITE`, `binance_th/models/enums.py:93-101`), a dedicated `symbol
 tellingly — **two different WebSocket base URLs** in config, one per type
 (`ws_base_url_global` → `/gstream`, `ws_base_url_site` → `/nstream`; `config.py:75-82`).
 
-⚠ ASSUMED (verify at implementation): the two types do **not** guarantee behavioral parity —
-available filters, `executionRules`, and stream routing may differ. Code that silently treats a
-symbol as type-agnostic risks subscribing a SITE symbol on a GLOBAL route or assuming a filter that
-only GLOBAL symbols carry.
+✓ VERIFIED (2026-07-09, live `GET /api/v1/exchangeInfo`): every symbol carries a `"type"` field
+(e.g. `"type":"GLOBAL"`), so the marker is present to branch on. ⚠ ASSUMED (needs cross-type
+comparison): the two types do **not** guarantee behavioral parity — available filters,
+`executionRules`, and stream routing may differ. Code that silently treats a symbol as type-agnostic
+risks subscribing a SITE symbol on a GLOBAL route or assuming a filter that only GLOBAL symbols carry.
 
 ## Decision
 

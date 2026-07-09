@@ -102,6 +102,15 @@ pre-existing build-plan doc) that this suite resolved:
    (**[ADR-0011](./adr/ADR-0011-global-vs-site-symbol-handling.md)**).
 9. **`recvWindow` for `-1021`** — keep `le=60000`, default 5000; offset is primary, `recvWindow` a
    tuning knob (**[ADR-0004](./adr/ADR-0004-server-time-offset-and-1021-resync.md)**).
+10. **`SymbolInfo` model mismatch (found in M1 live probe, 2026-07-09)** — the Phase-1 `SymbolInfo`
+    (`binance_th/models/base.py`) marks `icebergAllowed`, `ocoAllowed`, `isSpotTradingAllowed`,
+    `isMarginTradingAllowed`, and `permissions` as **required**, but the live TH `exchangeInfo` does
+    **not** return them (it returns `test`, `baseCommissionPrecision`, `quoteCommissionPrecision`,
+    `type`, `filters`, `orderTypes`); the observed filter set is `PRICE_FILTER`, `PERCENT_PRICE`,
+    `LOT_SIZE`, `MIN_NOTIONAL`, `MAX_NUM_ORDERS` (no `MARKET_LOT_SIZE`/`PRICE_RANGE`). So
+    `ExchangeInfo(**live_response)` will fail today. **Fix in M3 (WBS-M3-04)**: reconcile
+    `SymbolInfo`/`ExchangeInfo` to the real TH shape before wiring the exchangeInfo cache. Not fixed
+    in M1 (M1 does not parse exchangeInfo).
 
 ## Deferred tooling (recorded, intentionally not done in M0)
 

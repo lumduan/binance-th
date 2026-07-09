@@ -85,16 +85,17 @@ flowchart TD
 ## TH-vs-global invariants (design constraints)
 
 These are the ways Binance Thailand differs from the global API; each is a constraint the whole design
-honors. ⚠ = **ASSUMED**, to be verified against the live docs at implementation.
+honors. ⚠ = **ASSUMED**, to be verified against the live API at implementation; ✓ = **VERIFIED**
+(live-probed 2026-07-09).
 
 | Invariant | Constraint | ADR |
 |-----------|-----------|-----|
-| Response envelope `{code,msg,timestamp,data}`, `code==0`=success | Unwrap in one place; `code!=0`→typed error | 0002, 0006 |
-| Endpoints under `/api/v1/` (not `/api/v3/`) | Base paths pinned to `/api/v1` | 0002 |
+| ✓ Public reads **bare**, signed reads enveloped `{code,msg,timestamp,data}`, `code==0`=success | Unwrap in one place; bare default for unsigned; `code!=0`→typed error | 0002, 0006 |
+| ✓ Endpoints under `/api/v1/` (not `/api/v3/`) | Base paths pinned to `/api/v1` | 0002 |
 | ⚠ Single WS host + `?streams=` (`nbstream.binance.th/w3w/wsa/stream`) **vs** config's two hosts | Routing is config data behind a resolver seam | 0014 |
 | Account via `accountV2` | Account client targets `/api/v1/accountV2` | — |
-| GLOBAL vs SITE symbol types | `type` always surfaced; no assumed parity; type-driven routing | 0011, 0014 |
-| ⚠ Dual-window rate limits (~1000/10s + ~6000/1min) | Dual token bucket seeded from `exchangeInfo` | 0005 |
+| ✓ GLOBAL vs SITE symbol types (`type` present per symbol) | `type` always surfaced; no assumed parity; type-driven routing | 0011, 0014 |
+| ✓ Rate limits from `exchangeInfo`: weight 6000/1min + orders 6000/1min + 1000/10s; header `x-mbx-used-weight-1m` | Dual token bucket seeded from `exchangeInfo` | 0005 |
 | TH-only `referencePrice`, `executionRules`(PRICE_RANGE), `symbolType` | Pre-trade validation includes PRICE_RANGE | 0009, 0011 |
 | ⚠ Signing: HMAC-SHA256, insertion order, raw concat | Signer pins order + raw values; golden vector | 0003 |
 

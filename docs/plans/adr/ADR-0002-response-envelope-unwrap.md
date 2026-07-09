@@ -9,10 +9,13 @@
 Binance Thailand returns most REST responses inside an envelope
 `{"code": 0, "msg": "", "timestamp": <ms>, "data": <payload>}`, where **`code == 0` means success**
 and any other `code` is a failure carrying `msg`. This is documented in the Phase-1 exception
-module docstring (`binance_th/exceptions.py:26-32`). ⚠ ASSUMED (verify at implementation): some
-market-data endpoints (e.g. `depth`, `klines`, `trades`) appear to return **bare** payloads — a raw
-array or object with **no** envelope — matching the array parsers already written
-(`OrderBook.from_api`, `Kline.from_list` in `binance_th/models/market.py`).
+module docstring (`binance_th/exceptions.py:26-32`). ✓ VERIFIED (2026-07-09, live probe): public
+market/system endpoints return **bare** payloads — `GET /api/v1/time` → `{"serverTime":…}`,
+`GET /api/v1/exchangeInfo` → a bare object, and `GET /api/v1/ping` → the non-JSON literal `pong` —
+all under `/api/v1/`. The `{code,msg,timestamp,data}` envelope is therefore a **signed-endpoint**
+convention (not observable on public endpoints without credentials), matching the array parsers
+already written (`OrderBook.from_api`, `Kline.from_list` in `binance_th/models/market.py`). The
+implemented default is **bare for unsigned, enveloped for signed**.
 
 If each resource client unwrapped the envelope itself, the `code == 0` check and error mapping would
 be duplicated across dozens of endpoints and drift. We need exactly one seam that turns a raw HTTP
