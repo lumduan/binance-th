@@ -18,8 +18,10 @@ already written (`OrderBook.from_api`, `Kline.from_list` in `binance_th/models/m
 default is **bare for unsigned, enveloped for signed**. ✓ M3a (2026-07-09) implements **all** public
 market/system endpoints (`depth`/`trades`/`aggTrades`/`klines`/`ticker/*`/`referencePrice`/
 `executionRules`/`symbolType`/`exchangeInfo`) as bare, and confirmed even error bodies are the 2-key
-`{code,msg}` (no `data`/`timestamp`). Per the "treat signed as bare" decision, the signed default
-flips to bare in **M3b** when the account/wallet clients land.
+`{code,msg}` (no `data`/`timestamp`). ✓ M3b **implemented** the "treat signed as bare" decision: the
+transport's signed default is now bare (`envelope=False`); the `unwrap` path stays available for any
+caller that passes `envelope=True`. Signed account/wallet response shapes remain ⚠ ASSUMED until a
+credentialed soak — the M3b models were reconciled **defensively**, not verified.
 
 If each resource client unwrapped the envelope itself, the `code == 0` check and error mapping would
 be duplicated across dozens of endpoints and drift. We need exactly one seam that turns a raw HTTP
