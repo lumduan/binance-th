@@ -118,6 +118,12 @@ pre-existing build-plan doc) that this suite resolved:
     the signed→bare transport flip (WBS-M3-02, part of M3-03). **Deferred:** wallet **writes**
     (`withdraw`, `sub_account_transfer` — money-movers) to a later gated milestone. **⚠ ASSUMED:** all
     signed shapes are mock-tested only (no credentials) — reconcile in a live soak.
+12. **M4 orders (mock-only).** ✓ `client.orders`: create/cancel/query/openOrders with pre-trade
+    tick/step **floor-division** snapping + filter validation (ADR-0009), URL-safe client-order-id
+    minting (ADR-0013), and 5xx-UNKNOWN reconciliation (query-by-client-id, **never resubmit** —
+    ADR-0006, raising `BinanceThOrderUnknownError`). Order placement is signed, real-money, and
+    unverifiable → mock-tested only, ⚠ ASSUMED; **no live order test ships**. Deferred/dormant:
+    cancel-UNKNOWN reconciliation and active PRICE_RANGE validation.
 
 ## Deferred tooling (recorded, intentionally not done in M0)
 

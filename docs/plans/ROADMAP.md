@@ -38,7 +38,7 @@ orders (M4) for reconciliation, so that chain is longer than the parallel WS bra
 - [ ] **M1** — Transport & Auth core
 - [ ] **M2** — Rate limiting
 - [ ] **M3** — REST market + account/wallet read
-- [ ] **M4** — Orders
+- [~] **M4** — Orders (`client.orders`: create/cancel/query/openOrders + validation + id-minting + UNKNOWN reconciliation; mock-only, live placement pending a supervised soak)
 - [ ] **M5** — WS market streams + order book
 - [ ] **M6** — User-data stream
 - [ ] **M7** — Hardening & release
