@@ -16,6 +16,7 @@ from binance_th.account import AccountClient
 from binance_th.config import BinanceThConfig
 from binance_th.market import MarketClient
 from binance_th.models.base import ExchangeInfo, ServerTime, SymbolTypeInfo
+from binance_th.orders import OrdersClient
 from binance_th.transport import Transport
 from binance_th.wallet import WalletClient
 
@@ -42,6 +43,11 @@ class BinanceThClient:
         self.market = MarketClient(self._transport)
         self.account = AccountClient(self._transport)
         self.wallet = WalletClient(self._transport)
+        self.orders = OrdersClient(
+            self._transport,
+            exchange_info=self.exchange_info,
+            execution_rules=self.market.execution_rules,
+        )
         self._exchange_info: ExchangeInfo | None = None
         self._exchange_info_lock = asyncio.Lock()
 
