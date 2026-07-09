@@ -24,6 +24,7 @@ Note:
     REST client and WebSocket client will be available in future phases.
 """
 
+from binance_th.client import BinanceThClient
 from binance_th.config import BinanceThConfig
 from binance_th.exceptions import (
     BinanceThAPIError,
@@ -53,6 +54,8 @@ __all__ = [
     "BinanceThAPIError",
     "BinanceThAuthError",
     "BinanceThBadRequestError",
+    # Client
+    "BinanceThClient",
     # Config
     "BinanceThConfig",
     # Exceptions
