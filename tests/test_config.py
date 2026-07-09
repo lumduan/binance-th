@@ -15,6 +15,7 @@ class TestBinanceThConfig:
         assert config.api_key is None
         assert config.api_secret is None
         assert config.rest_base_url == "https://api.binance.th"
+        assert config.ws_base_url == "wss://nbstream.binance.th/w3w/wsa/stream"
         assert config.ws_base_url_global == "wss://www.binance.th/gstream"
         assert config.ws_base_url_site == "wss://www.binance.th/nstream"
         assert config.timeout == 30.0
@@ -24,6 +25,7 @@ class TestBinanceThConfig:
         assert config.ws_auto_reconnect is True
         assert config.ws_ping_interval == 20
         assert config.ws_ping_timeout == 10
+        assert config.ws_supports_live_subscribe is True
         assert config.log_level == "INFO"
         assert config.log_requests is False
         assert config.log_responses is False
@@ -95,6 +97,15 @@ class TestBinanceThConfig:
         assert config.rest_base_url == "https://custom.api.com"
         assert config.ws_base_url_global == "wss://custom.ws.com/global"
         assert config.ws_base_url_site == "wss://custom.ws.com/site"
+
+    def test_ws_routing_seam_overridable(self) -> None:
+        """The single-host default and the live-subscribe flag are config data (ADR-0014)."""
+        config = BinanceThConfig(
+            ws_base_url="wss://custom.ws.com/stream",
+            ws_supports_live_subscribe=False,
+        )
+        assert config.ws_base_url == "wss://custom.ws.com/stream"
+        assert config.ws_supports_live_subscribe is False
 
     def test_extra_fields_ignored(self) -> None:
         """Test that extra fields are ignored."""

@@ -35,8 +35,9 @@ class BinanceThConfig(BaseSettings):
         api_key: API key for authenticated endpoints
         api_secret: API secret for signed endpoints (stored securely)
         rest_base_url: Base URL for REST API
-        ws_base_url_global: WebSocket URL for GLOBAL symbols
-        ws_base_url_site: WebSocket URL for SITE symbols
+        ws_base_url: Default combined-stream WebSocket host (single-host topology)
+        ws_base_url_global: Override WebSocket URL for GLOBAL symbols (dual-host topology)
+        ws_base_url_site: Override WebSocket URL for SITE symbols (dual-host topology)
         timeout: Request timeout in seconds
         max_retries: Maximum retries for transient errors
         enable_rate_limiting: Enable automatic rate limiting
@@ -44,6 +45,7 @@ class BinanceThConfig(BaseSettings):
         ws_auto_reconnect: Enable automatic WebSocket reconnection
         ws_ping_interval: WebSocket ping interval in seconds
         ws_ping_timeout: WebSocket ping timeout in seconds
+        ws_supports_live_subscribe: Server accepts live SUBSCRIBE/UNSUBSCRIBE control frames
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
         log_requests: Log all API requests (for debugging)
         log_responses: Log all API responses (for debugging)
@@ -72,13 +74,21 @@ class BinanceThConfig(BaseSettings):
         default="https://api.binance.th",
         description="REST API base URL",
     )
+    ws_base_url: str = Field(
+        default="wss://nbstream.binance.th/w3w/wsa/stream",
+        description=(
+            "Default combined-stream WebSocket host (single-host `?streams=` topology). "
+            "The stream router uses this for both GLOBAL and SITE symbols unless the two "
+            "override URLs below are set to non-default values (ADR-0014)."
+        ),
+    )
     ws_base_url_global: str = Field(
         default="wss://www.binance.th/gstream",
-        description="WebSocket URL for GLOBAL symbols",
+        description="Override WebSocket URL for GLOBAL symbols (dual-host topology)",
     )
     ws_base_url_site: str = Field(
         default="wss://www.binance.th/nstream",
-        description="WebSocket URL for SITE symbols",
+        description="Override WebSocket URL for SITE symbols (dual-host topology)",
     )
 
     # Client Settings
@@ -117,6 +127,13 @@ class BinanceThConfig(BaseSettings):
         default=10,
         description="WebSocket ping timeout in seconds",
         gt=0,
+    )
+    ws_supports_live_subscribe: bool = Field(
+        default=True,
+        description=(
+            "Whether the server accepts live SUBSCRIBE/UNSUBSCRIBE control frames on an open "
+            "connection. When False, dynamic (un)subscribe reconnects with a new `?streams=` URL."
+        ),
     )
 
     # Logging Settings
