@@ -8,6 +8,7 @@ from binance_th import BinanceThClient
 from binance_th.config import BinanceThConfig
 from binance_th.models.enums import RateLimitInterval, RateLimitType, SymbolType
 from binance_th.ratelimit import DualWindowRateLimiter
+from binance_th.stream import StreamClient
 
 from .conftest import TransportFactory
 
@@ -109,6 +110,19 @@ class TestBinanceThClient:
             async with BinanceThClient(BinanceThConfig()) as client:
                 assert client.is_closed is False
             assert client.is_closed is True
+
+    async def test_ws_client_attached_and_torn_down(self, mock_transport: TransportFactory) -> None:
+        """The client exposes a StreamClient at ``.ws`` and closes it on aclose (ADR-0015)."""
+
+        def handler(_request: httpx.Request) -> httpx.Response:  # pragma: no cover - unused
+            return httpx.Response(200, text="pong")
+
+        transport, _ = mock_transport(handler)
+        client = BinanceThClient(transport=transport)
+        assert isinstance(client.ws, StreamClient)
+        await client.aclose()
+        assert client.ws._closing is True
+        assert client.is_closed is True
 
 
 class TestExchangeInfoAndSymbolTypes:
