@@ -38,6 +38,7 @@ ENVELOPE_CODE_MAP: dict[int, type[BinanceThAPIError]] = {
     -1022: BinanceThAuthError,  # invalid signature
     -2014: BinanceThAuthError,  # bad api-key format
     -2015: BinanceThAuthError,  # rejected api-key / permissions / IP
+    -1000: BinanceThBadRequestError,  # generic bad request (e.g. symbol not served by endpoint)
     -1100: BinanceThBadRequestError,  # illegal chars in a parameter
     -1102: BinanceThBadRequestError,  # mandatory param missing/empty
     -1013: BinanceThBadRequestError,  # filter failure (PRICE_FILTER, LOT_SIZE, ...)

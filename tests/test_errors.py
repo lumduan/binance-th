@@ -46,6 +46,11 @@ class TestMapException:
         """The map contains the load-bearing codes."""
         assert ENVELOPE_CODE_MAP[-1021] is BinanceThAuthError
         assert ENVELOPE_CODE_MAP[-1013] is BinanceThBadRequestError
+        assert ENVELOPE_CODE_MAP[-1000] is BinanceThBadRequestError
+
+    def test_generic_1000_maps_to_bad_request(self) -> None:
+        """TH's generic -1000 (e.g. symbol not served by an endpoint) is a bad request."""
+        assert map_exception(400, -1000) is BinanceThBadRequestError
 
 
 class TestRaiseForHttpStatus:
