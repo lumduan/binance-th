@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-`binance-th` is a typed, async-first Python client library for the Binance **Thailand** API. It is built in phases (tracked in `README.md`); **only Phase 1 exists**: Pydantic models, the exception hierarchy, and configuration. There is **no REST client, WebSocket client, authentication, or rate limiter yet** — those are planned. Docstrings throughout describe how future clients *will* behave (e.g. auto-signing); treat those as design contracts, not existing code.
+`binance-th` is a typed, async-first Python client library for the Binance **Thailand** API. It is **feature-complete at `1.0.0`** — milestones M1–M7 are implemented and merged (tracked in `docs/plans/ROADMAP.md`): the async `httpx` transport with HMAC signing / server-time offset / typed errors (M1), the dual-window rate limiter + retry (M2), the REST clients `client.market`/`account`/`wallet` (M3) and `client.orders` with pre-trade validation + UNKNOWN reconciliation (M4), the WebSocket `client.ws` market streams + self-syncing local order book (M5), and `client.user_stream` — the authenticated user-data stream with a self-healing order tracker (M6). M7 added packaging (`py.typed`, PyPI publish workflow), a weekly `bandit`/`pip-audit` security scan, and the community meta set. The public REST/WS shapes are **live-verified** (the probes under `scripts/`); the only remaining ⚠ASSUMED surface is the user-data **event shapes** (`executionReport`/`outboundAccountPosition`/`balanceUpdate`), pending the guarded `scripts/soak_userdata.py` order soak.
 
 ## Commands
 

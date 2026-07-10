@@ -41,7 +41,7 @@ orders (M4) for reconciliation, so that chain is longer than the parallel WS bra
 - [x] **M4** — Orders (`client.orders`: create/cancel/query/openOrders + validation + id-minting + UNKNOWN reconciliation; mock-only, live placement pending a supervised soak)
 - [x] **M5** — WS market streams + order book (`client.ws`: watch_* async iterators for depth/trade/aggTrade/kline/bookTicker/ticker + self-syncing `order_book`; dual-host GLOBAL/SITE routing and shapes **live-verified 2026-07-09** — the ADR-0014 single-host default was flipped to dual-host)
 - [x] **M6** — User-data stream (`client.user_stream`: dual GLOBAL/SITE listenKey manager + keepalive, `watch_orders/watch_account/watch_balances`, a self-healing drop-reconciled order tracker; **listenKey lifecycle + connect live-verified 2026-07-10**, event shapes ⚠ASSUMED pending an order-activity soak)
-- [ ] **M7** — Hardening & release
+- [x] **M7** — Hardening & release (`1.0.0`: `py.typed`, dynamic version + stable classifier, weekly `bandit`+`pip-audit` `security.yml`, enforced coverage gate, deep redaction, **PyPI publish** `release.yml` [Docker dropped — meaningless for a library], full community meta set, guarded order-soak script)
 - [x] **Phase 1 (pre-M0)** — models, exceptions, config (already in `main`)
 
 ## ADRs (all authored in M0)

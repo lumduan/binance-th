@@ -61,7 +61,7 @@ from binance_th.ordertracker import LocalOrderView, OrderTracker
 from binance_th.stream import StreamClient
 from binance_th.userstream import UserDataStream
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "BinanceThAPIError",

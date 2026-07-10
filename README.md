@@ -4,6 +4,12 @@
 
 A production-ready Python async library for the Binance Thailand API.
 
+[![CI](https://github.com/lumduan/binance-th/actions/workflows/ci.yml/badge.svg)](https://github.com/lumduan/binance-th/actions/workflows/ci.yml)
+[![Security](https://github.com/lumduan/binance-th/actions/workflows/security.yml/badge.svg)](https://github.com/lumduan/binance-th/actions/workflows/security.yml)
+[![PyPI](https://img.shields.io/pypi/v/binance-th)](https://pypi.org/project/binance-th/)
+[![Python](https://img.shields.io/pypi/pyversions/binance-th)](https://pypi.org/project/binance-th/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 ---
 
 ## English
@@ -62,7 +68,7 @@ This library is under active development.
 - [x] **Phase 3: REST API Client** — Market, account/wallet reads + orders (create/cancel/query)
 - [x] **Phase 4: WebSocket Market Streams** — depth/trade/aggTrade/kline/bookTicker/ticker + self-syncing local order book (live-verified)
 - [x] **Phase 5: User-Data Stream** — listenKey manager (dual GLOBAL/SITE keys), account/order events, self-healing order tracker (live-verified)
-- [ ] **Phase 6: Documentation & Release** — Full documentation, PyPI release
+- [x] **Phase 6: Documentation & Release** — Docs, security scanning (bandit/pip-audit), PyPI publish workflow — `1.0.0`
 
 ### Planning & Architecture Decisions
 
@@ -80,7 +86,7 @@ Thailand API.
 
 ### License
 
-MIT
+Released under the [MIT License](LICENSE).
 
 ---
 
@@ -144,7 +150,7 @@ asyncio.run(main())
 - [x] **Phase 3: REST API Client** — market, account/wallet reads + orders (create/cancel/query)
 - [x] **Phase 4: WebSocket Market Streams** — depth/trade/aggTrade/kline/bookTicker/ticker + local order book ที่ซิงก์ตัวเอง (ตรวจสอบกับ feed จริงแล้ว)
 - [x] **Phase 5: User-Data Stream** — ตัวจัดการ listenKey (คีย์ GLOBAL/SITE คู่), เหตุการณ์บัญชี/คำสั่ง, order tracker ที่ซ่อมแซมตัวเอง (ตรวจสอบกับ feed จริงแล้ว)
-- [ ] **Phase 6: เอกสารและการเผยแพร่** — เอกสารครบถ้วน, เผยแพร่บน PyPI
+- [x] **Phase 6: เอกสารและการเผยแพร่** — เอกสาร, สแกนความปลอดภัย (bandit/pip-audit), workflow เผยแพร่บน PyPI — `1.0.0`
 
 ### การวางแผนและการตัดสินใจเชิงสถาปัตยกรรม
 
@@ -161,4 +167,4 @@ asyncio.run(main())
 
 ### สัญญาอนุญาต
 
-MIT
+เผยแพร่ภายใต้ [สัญญาอนุญาต MIT](LICENSE)
