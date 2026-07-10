@@ -1,19 +1,20 @@
 name: Release
 
-# Publishes to PyPI on a version tag (e.g. `git tag v1.0.0 && git push --tags`).
-# Publishing uses PyPI Trusted Publishing (OIDC) — configure the trusted publisher for
-# this repo/workflow on PyPI once before the first release. The `build` job validates the
-# artifact with no secrets and runs regardless.
+# On a version tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`): build the sdist +
+# wheel and cut a GitHub Release with them attached.
+#
+# PyPI publishing is done separately via `scripts/publish.sh` (token-based) — this workflow
+# does NOT publish to PyPI, so it needs no PyPI trusted-publisher setup or secrets.
 on:
   push:
     tags: ["v*"]
 
 permissions:
-  contents: read
+  contents: write # create the GitHub Release + upload assets
 
 jobs:
-  build:
-    name: Build & check
+  release:
+    name: Build & GitHub Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,28 +33,8 @@ jobs:
       - name: Check artifacts
         run: uvx twine check dist/*
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: dist
-          path: dist/
-
-  publish:
-    name: Publish to PyPI
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write # trusted publishing (OIDC) — no API token needed
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # idempotent if a version was already uploaded via scripts/publish.sh
-          skip-existing: true
+          files: dist/*
+          generate_release_notes: true
