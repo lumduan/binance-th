@@ -73,13 +73,13 @@ type. keepalive/close = `?listenKey=`; the 64-char **SITE key is rejected by the
 **Event shapes were not observed** (idle account) → `executionReport`/`outboundAccountPosition`/
 `balanceUpdate` remain ⚠ASSUMED, to confirm in a credentialed **order-activity soak** (inherited by M7).
 
-## M7 — Hardening & release (`1.0.0`)
+## M7 — Hardening & release (`1.0.0`) — **done**
 
 | ID | Title | Deps | ADRs | FRs | Sz | Exit criteria |
 |----|-------|------|------|-----|----|---------------|
-| WBS-M7-01 | Packaging finalize (semver, wheel, classifiers) | M1–M6 | 0010 | FR-GEN-04 | S | `uv build` wheel imports as `binance_th` |
-| WBS-M7-02 | Security toolchain (`bandit`, `pip-audit`, `security.yml`) | — | 0017 | FR-AUTH-03 | M | weekly scan job green; redaction test in CI |
-| WBS-M7-03 | `docker-publish.yml` + `LICENSE` + docs polish | M7-01 | 0010 | — | S | tag `v*` → ghcr image; MIT `LICENSE` present |
+| WBS-M7-01 ✅ | Packaging finalize (semver, wheel, classifiers) | M1–M6 | 0010 | FR-GEN-04 | S | `uv build` wheel imports as `binance_th`; adds the missing `py.typed` + dynamic version + stable classifier |
+| WBS-M7-02 ✅ | Security toolchain (`bandit`, `pip-audit`, `security.yml`) | — | 0017 | FR-AUTH-03 | M | weekly scan green; redaction log-capture test in CI; **also fixed the CI coverage gate that wasn't enforced** + deep redaction |
+| WBS-M7-03 ✅ | **PyPI `release.yml`** + `LICENSE` + docs polish | M7-01 | 0010 | — | S | tag `v*` → **PyPI publish** (trusted publishing) — **Docker dropped**: a ghcr image is meaningless for an importable library; PyPI is the ADR-0010 channel. MIT `LICENSE` + full community meta set present. |
 
 **Critical path:** `M0 → M1 → M2 → M3 → M4 → M6 → M7` (see [ROADMAP.md](./ROADMAP.md)). The WS branch
 `M1 → M3 → M5 → M6` runs in parallel and rejoins at M6.
