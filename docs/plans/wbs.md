@@ -58,12 +58,20 @@ time. Items are the unit of PR; exit criteria are testable.
 | WBS-M5-02 ✅ | Verify GLOBAL/SITE topology vs live console | M5-01 | 0011, 0014 | FR-WSS-03 | S | **FLIPPED to dual-host** (`/gstream`+`/nstream`), config-only; single-host is the WSA host (no market push) |
 | WBS-M5-03 ✅ | Local order-book sync engine | M5-01, M3-01 | 0007 | FR-WSS-02 | L | update-id gap → re-snapshot; replay == reference book |
 
-## M6 — User-data stream (`0.7.0`)
+## M6 — User-data stream (`0.7.0`) — **done, lifecycle live-verified 2026-07-10**
 
 | ID | Title | Deps | ADRs | FRs | Sz | Exit criteria |
 |----|-------|------|------|-----|----|---------------|
-| WBS-M6-01 | `ListenKeyManager` (interface + REST impl, keepalive) | M1-01, M5-01 | 0008 | FR-UDS-01, FR-UDS-03 | M | keepalive < 30 min; injectable; drop → reconcile fetch |
-| WBS-M6-02 | User-data event decode → local order state | M6-01, M4-01 | 0002 | FR-UDS-02 | M | `executionReport` updates the tracked order |
+| WBS-M6-01 ✅ | `ListenKeyManager` (interface + REST impl, keepalive) | M1-01, M5-01 | 0008 | FR-UDS-01, FR-UDS-03 | M | keepalive < 30 min; injectable; drop → reconcile fetch |
+| WBS-M6-02 ✅ | User-data event decode → local order state | M6-01, M4-01 | 0002 | FR-UDS-02 | M | `executionReport` updates the tracked order |
+
+**Live findings (2026-07-10, `scripts/probe_userdata.py`):** `POST /api/v1/listenKey` returns a **list —
+one key per symbol type** (GLOBAL + SITE); both stream **bare** frames from
+`wss://nbstream.binance.th/w3w/wsa/stream/ws/<listenKey>`. So `UserDataStream` holds one connection per
+type. keepalive/close = `?listenKey=`; the 64-char **SITE key is rejected by the server's own
+`^[a-zA-Z0-9]{1,60}$` regex** (a TH bug) → SITE keeps alive best-effort and self-heals via reconnect.
+**Event shapes were not observed** (idle account) → `executionReport`/`outboundAccountPosition`/
+`balanceUpdate` remain ⚠ASSUMED, to confirm in a credentialed **order-activity soak** (inherited by M7).
 
 ## M7 — Hardening & release (`1.0.0`)
 

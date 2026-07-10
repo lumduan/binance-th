@@ -15,7 +15,7 @@ A production-ready Python async library for the Binance Thailand API.
 - **Modern Python**: Supports Python 3.12+
 - **Comprehensive Error Handling**: Typed exception hierarchy for precise error handling
 - **Rate Limiting**: Dual-window token bucket with `x-mbx-used-weight` reconciliation and automatic backoff
-- **WebSocket Support**: Real-time market streams (depth, trades, klines, tickers) and a self-syncing local order book; user-data streams planned
+- **WebSocket Support**: Real-time market streams (depth, trades, klines, tickers), a self-syncing local order book, and an authenticated user-data stream with a self-healing order tracker
 
 ### Installation
 
@@ -61,7 +61,7 @@ This library is under active development.
 - [x] **Phase 2: Authentication & Rate Limiting** — HMAC signatures, server-time offset, dual-window token bucket
 - [x] **Phase 3: REST API Client** — Market, account/wallet reads + orders (create/cancel/query)
 - [x] **Phase 4: WebSocket Market Streams** — depth/trade/aggTrade/kline/bookTicker/ticker + self-syncing local order book (live-verified)
-- [ ] **Phase 5: User-Data Stream** — listenKey manager, account/order events
+- [x] **Phase 5: User-Data Stream** — listenKey manager (dual GLOBAL/SITE keys), account/order events, self-healing order tracker (live-verified)
 - [ ] **Phase 6: Documentation & Release** — Full documentation, PyPI release
 
 ### Planning & Architecture Decisions
@@ -97,7 +97,7 @@ MIT
 - **Python สมัยใหม่**: รองรับ Python 3.12 ขึ้นไป
 - **การจัดการข้อผิดพลาดครบถ้วน**: ลำดับชั้นของ exception ที่มีชนิดชัดเจน เพื่อการจัดการข้อผิดพลาดที่แม่นยำ
 - **การจำกัดอัตราการเรียก (Rate Limiting)**: token bucket แบบสองหน้าต่าง ปรับตามส่วนหัว `x-mbx-used-weight` พร้อม backoff อัตโนมัติ
-- **รองรับ WebSocket**: สตรีมข้อมูลตลาดแบบเรียลไทม์ (depth, trades, klines, tickers) และ local order book ที่ซิงก์ตัวเอง; สตรีมข้อมูลผู้ใช้อยู่ในแผน
+- **รองรับ WebSocket**: สตรีมข้อมูลตลาดแบบเรียลไทม์ (depth, trades, klines, tickers), local order book ที่ซิงก์ตัวเอง และสตรีมข้อมูลผู้ใช้ (user-data) ที่ยืนยันตัวตนพร้อม order tracker ที่ซ่อมแซมตัวเอง
 
 ### การติดตั้ง
 
@@ -143,7 +143,7 @@ asyncio.run(main())
 - [x] **Phase 2: การยืนยันตัวตนและการจำกัดอัตรา** — ลายเซ็น HMAC, ชดเชยเวลาเซิร์ฟเวอร์, token bucket แบบสองหน้าต่าง
 - [x] **Phase 3: REST API Client** — market, account/wallet reads + orders (create/cancel/query)
 - [x] **Phase 4: WebSocket Market Streams** — depth/trade/aggTrade/kline/bookTicker/ticker + local order book ที่ซิงก์ตัวเอง (ตรวจสอบกับ feed จริงแล้ว)
-- [ ] **Phase 5: User-Data Stream** — ตัวจัดการ listenKey, เหตุการณ์บัญชี/คำสั่ง
+- [x] **Phase 5: User-Data Stream** — ตัวจัดการ listenKey (คีย์ GLOBAL/SITE คู่), เหตุการณ์บัญชี/คำสั่ง, order tracker ที่ซ่อมแซมตัวเอง (ตรวจสอบกับ feed จริงแล้ว)
 - [ ] **Phase 6: เอกสารและการเผยแพร่** — เอกสารครบถ้วน, เผยแพร่บน PyPI
 
 ### การวางแผนและการตัดสินใจเชิงสถาปัตยกรรม
