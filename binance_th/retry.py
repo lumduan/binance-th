@@ -15,7 +15,8 @@ from typing import Any
 
 __all__ = ["BackoffRetryer"]
 
-_DEFAULT_RNG = random.Random()
+# Jitter for retry backoff only — not security-sensitive, so the stdlib PRNG is fine.
+_DEFAULT_RNG = random.Random()  # nosec B311
 
 
 def _full_jitter(ceiling: float) -> float:

@@ -42,9 +42,22 @@ def _is_sensitive(key: str) -> bool:
     return key.lower() in SENSITIVE_KEYS
 
 
+def _redact_value(value: Any) -> Any:
+    """Recurse into nested mappings/sequences, masking sensitive keys at any depth."""
+    if isinstance(value, Mapping):
+        return {k: (REDACTED if _is_sensitive(k) else _redact_value(v)) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_redact_value(item) for item in value]
+    return value
+
+
 def redact_params(params: Mapping[str, Any]) -> dict[str, Any]:
-    """Return a shallow copy of ``params`` with sensitive values masked."""
-    return {k: (REDACTED if _is_sensitive(k) else v) for k, v in params.items()}
+    """Return a deep copy of ``params`` with sensitive values masked at any nesting depth.
+
+    Recurses into nested dicts/lists so a credential buried in a response body (not just a
+    top-level key) is masked before it can reach a logger.
+    """
+    return {k: (REDACTED if _is_sensitive(k) else _redact_value(v)) for k, v in params.items()}
 
 
 def redact_headers(headers: Mapping[str, str]) -> dict[str, str]:
