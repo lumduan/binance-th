@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > exceptions
 
+**English** · [ไทย](../th/reference/exceptions.md)
+
 **Module:** `binance_th.exceptions` · **Available since:** 1.0.0
 
 Every error the library raises. Catch `BinanceThError` to catch them all; catch a specific subclass to

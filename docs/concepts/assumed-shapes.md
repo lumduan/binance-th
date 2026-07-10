@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Concepts > Assumed shapes
 
+**English** · [ไทย](../th/concepts/assumed-shapes.md)
+
 binance-th was built endpoint-by-endpoint against the live API, so most response models match reality
 exactly. A few couldn't be verified live yet — those are marked **⚠ ASSUMED**, and it's worth knowing
 which so you don't over-trust their exact field sets.

@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > client
 
+**English** · [ไทย](../th/reference/client.md)
+
 **Module:** `binance_th.client` · **Available since:** 1.0.0
 
 The async entry point. Owns the HTTP + WebSocket connections and exposes the sub-clients. Use it as an

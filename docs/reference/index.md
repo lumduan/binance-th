@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference
 
+**English** · [ไทย](../th/reference/index.md)
+
 **Available since:** 1.0.0. Every method's exact signature, parameters, and return type. For narrative,
 see the [guides](../guides/market-data.md); for the whole surface on one page, [`llms.txt`](../../llms.txt).
 

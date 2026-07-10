@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > streams
 
+**English** · [ไทย](../th/reference/streams.md)
+
 **Module:** `binance_th.ws` · **Available since:** 1.0.0
 
 WebSocket market streams (`client.ws`). Public — no credentials. Each `watch_*` is an **async

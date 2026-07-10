@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Guides > Local order book
 
+**English** · [ไทย](../th/guides/local-order-book.md)
+
 `client.ws.order_book(symbol)` gives you an order book that stays in sync on its own: it seeds from a
 REST snapshot, applies the live depth stream, and re-snapshots if it ever detects a gap. You read it
 synchronously while it updates in the background.

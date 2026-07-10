@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Guides > User-data stream
 
+**English** · [ไทย](../th/guides/user-data-stream.md)
+
 `client.user_stream` delivers your own account activity in real time — order updates, balance snapshots,
 and balance deltas — plus a self-healing view of your open orders.
 

@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Guides > Market streams
 
+**English** · [ไทย](../th/guides/market-streams.md)
+
 `client.ws` gives you live market data over WebSocket as async iterators. All of it is public — no
 credentials needed.
 

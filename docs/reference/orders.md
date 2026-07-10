@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > orders
 
+**English** · [ไทย](../th/reference/orders.md)
+
 **Module:** `binance_th.orders` · **Available since:** 1.0.0
 
 Signed order management (`client.orders`) — create, cancel, and query orders. Every method is **signed**

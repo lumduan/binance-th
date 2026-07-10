@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Guides > Orders
 
+**English** · [ไทย](../th/guides/orders.md)
+
 `client.orders` places, cancels, and queries orders. These are **signed** endpoints that move **real
 money** — read [Errors & reconciliation](../concepts/errors-and-reconciliation.md) first.
 

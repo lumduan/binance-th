@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Guides > Market data
 
+**English** · [ไทย](../th/guides/market-data.md)
+
 Everything under `client.market` is public — no credentials needed.
 
 ## Prerequisites

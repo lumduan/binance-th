@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > market
 
+**English** · [ไทย](../th/reference/market.md)
+
 **Module:** `binance_th.market` · **Available since:** 1.0.0
 
 Public market data (`client.market`). No credentials required. Money fields are `Decimal`.

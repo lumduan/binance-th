@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Development > Contributing
 
+**English** · [ไทย](../th/development/contributing.md)
+
 The full guide lives in [`CONTRIBUTING.md`](../../CONTRIBUTING.md); this page is the short version for
 working in the code. Security policy is in [`SECURITY.md`](../../SECURITY.md).
 

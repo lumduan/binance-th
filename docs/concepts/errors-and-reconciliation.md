@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Concepts > Errors & reconciliation
 
+**English** · [ไทย](../th/concepts/errors-and-reconciliation.md)
+
 Every failure raises a typed exception, so you can catch exactly the case you care about. All of them
 derive from `BinanceThError`.
 

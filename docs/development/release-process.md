@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Development > Release process
 
+**English** · [ไทย](../th/development/release-process.md)
+
 `binance-th` is on PyPI: <https://pypi.org/project/binance-th/>. The version is **dynamic** — hatchling
 reads `binance_th.__version__` from `binance_th/__init__.py`, so there is no `version` in
 `pyproject.toml`. Bump the version there.

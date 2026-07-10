@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > wallet
 
+**English** · [ไทย](../th/reference/wallet.md)
+
 **Module:** `binance_th.wallet` · **Available since:** 1.0.0
 
 Signed wallet reads (`client.wallet`) — deposit addresses and deposit/withdrawal history. Every method

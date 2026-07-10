@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > user-stream
 
+**English** · [ไทย](../th/reference/user-stream.md)
+
 **Module:** `binance_th.user_stream` · **Available since:** 1.0.0
 
 The user-data stream (`client.user_stream`) — live order, account, and balance updates for your account.

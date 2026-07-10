@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Guides > Pagination
 
+**English** · [ไทย](../th/guides/pagination.md)
+
 Some history is longer than a single call can return. The `iter_*` methods page through it for you and
 hand back one async stream of de-duplicated results.
 

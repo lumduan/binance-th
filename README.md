@@ -159,7 +159,7 @@ against the live API — don't over-trust those field shapes. See
 
 ### Documentation
 
-Full docs live in [`docs/`](docs/index.md):
+Full docs live in [`docs/`](docs/index.md) — also available in [ภาษาไทย](docs/th/index.md):
 
 - **Getting started** — [Installation](docs/getting-started/installation.md) ·
   [Quickstart](docs/getting-started/quickstart.md) · [Authentication](docs/getting-started/authentication.md)
@@ -312,8 +312,8 @@ asyncio.run(main())
 
 ### เอกสาร
 
-เอกสารฉบับเต็ม (ภาษาอังกฤษ) อยู่ที่ [`docs/`](docs/index.md) — เริ่มที่
-[Quickstart](docs/getting-started/quickstart.md) หรือ [API reference](docs/reference/index.md)
+เอกสารฉบับเต็ม **ภาษาไทย** อยู่ที่ [`docs/th/`](docs/th/index.md) (ต้นฉบับภาษาอังกฤษที่ [`docs/`](docs/index.md)) — เริ่มที่
+[เริ่มต้นอย่างรวดเร็ว](docs/th/getting-started/quickstart.md) หรือ [อ้างอิง API](docs/th/reference/index.md)
 สำหรับ AI agent เริ่มที่ [`llms.txt`](llms.txt)
 
 ### สัญญาอนุญาต

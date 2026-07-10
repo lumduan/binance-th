@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Getting Started > Installation
 
+**English** · [ไทย](../th/getting-started/installation.md)
+
 binance-th needs **Python 3.12 or newer**.
 
 ## Install
