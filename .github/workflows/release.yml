@@ -54,3 +54,6 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # idempotent if a version was already uploaded via scripts/publish.sh
+          skip-existing: true
