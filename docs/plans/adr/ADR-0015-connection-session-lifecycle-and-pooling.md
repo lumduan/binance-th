@@ -38,6 +38,19 @@ the per-connection cap allocates a second connection rather than failing.
 - The client becomes a stateful, must-close resource; callers must use the context manager (or call
   `aclose()`), which is the standard async-resource contract.
 
+## Live verification (M5 · 2026-07-09)
+
+The topology probe ([ADR-0014](./ADR-0014-stream-routing-and-base-url-topology.md)) established that
+GLOBAL and SITE symbols stream from **different hosts** (`/gstream` vs `/nstream`). So "one
+multiplexed WebSocket per client instance" is refined to **one multiplexed connection _per host_**:
+a client watching only one symbol type holds a single connection; one watching both holds two (a
+GLOBAL host connection + a SITE host connection). `StreamClient` keys connections by host and applies
+the proactive-reconnect + per-connection stream-cap machinery to each independently — the lifecycle
+guarantees (deterministic close, no leaks, planned pre-24h reconnect) are unchanged and hold per
+connection. The per-connection stream cap (~1024) and the ~24h boundary remain ⚠ ASSUMED (v1 ships a
+single connection per host with a proactive-reconnect timer; multi-connection spill past the cap is
+the flagged trim point).
+
 ## Alternatives Considered
 
 - **New client/connection per request** — rejected: no reuse, socket churn, leaks.

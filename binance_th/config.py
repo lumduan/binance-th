@@ -35,8 +35,9 @@ class BinanceThConfig(BaseSettings):
         api_key: API key for authenticated endpoints
         api_secret: API secret for signed endpoints (stored securely)
         rest_base_url: Base URL for REST API
-        ws_base_url_global: WebSocket URL for GLOBAL symbols
-        ws_base_url_site: WebSocket URL for SITE symbols
+        ws_base_url: Default combined-stream WebSocket host (single-host topology)
+        ws_base_url_global: Override WebSocket URL for GLOBAL symbols (dual-host topology)
+        ws_base_url_site: Override WebSocket URL for SITE symbols (dual-host topology)
         timeout: Request timeout in seconds
         max_retries: Maximum retries for transient errors
         enable_rate_limiting: Enable automatic rate limiting
@@ -44,6 +45,7 @@ class BinanceThConfig(BaseSettings):
         ws_auto_reconnect: Enable automatic WebSocket reconnection
         ws_ping_interval: WebSocket ping interval in seconds
         ws_ping_timeout: WebSocket ping timeout in seconds
+        ws_supports_live_subscribe: Server accepts live SUBSCRIBE/UNSUBSCRIBE control frames
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
         log_requests: Log all API requests (for debugging)
         log_responses: Log all API responses (for debugging)
@@ -72,13 +74,21 @@ class BinanceThConfig(BaseSettings):
         default="https://api.binance.th",
         description="REST API base URL",
     )
+    ws_base_url: str = Field(
+        default="wss://nbstream.binance.th/w3w/wsa/stream",
+        description=(
+            "Reserved single combined-stream host (WSA path). The M5 live probe (2026-07-09) found it "
+            "ACKs SUBSCRIBE but does not push market data; the verified market-stream topology is "
+            "dual-host (below). Kept for forward-compat / user-data (M6); not the market-stream default."
+        ),
+    )
     ws_base_url_global: str = Field(
         default="wss://www.binance.th/gstream",
-        description="WebSocket URL for GLOBAL symbols",
+        description="WebSocket host for GLOBAL symbols (verified market-stream route, ADR-0014)",
     )
     ws_base_url_site: str = Field(
         default="wss://www.binance.th/nstream",
-        description="WebSocket URL for SITE symbols",
+        description="WebSocket host for SITE symbols (verified market-stream route, ADR-0014)",
     )
 
     # Client Settings
@@ -117,6 +127,13 @@ class BinanceThConfig(BaseSettings):
         default=10,
         description="WebSocket ping timeout in seconds",
         gt=0,
+    )
+    ws_supports_live_subscribe: bool = Field(
+        default=True,
+        description=(
+            "Whether the server accepts live SUBSCRIBE/UNSUBSCRIBE control frames on an open "
+            "connection. When False, dynamic (un)subscribe reconnects with a new `?streams=` URL."
+        ),
     )
 
     # Logging Settings

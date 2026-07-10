@@ -34,12 +34,12 @@ orders (M4) for reconciliation, so that chain is longer than the parallel WS bra
 
 ## Current status
 
-- [~] **M0** — Planning suite (this PR: HLD, FRD, WBS, ROADMAP, 17 ADRs, project-skill, bilingual README)
-- [ ] **M1** — Transport & Auth core
-- [ ] **M2** — Rate limiting
-- [ ] **M3** — REST market + account/wallet read
-- [~] **M4** — Orders (`client.orders`: create/cancel/query/openOrders + validation + id-minting + UNKNOWN reconciliation; mock-only, live placement pending a supervised soak)
-- [ ] **M5** — WS market streams + order book
+- [x] **M0** — Planning suite (HLD, FRD, WBS, ROADMAP, 17 ADRs, project-skill, bilingual README)
+- [x] **M1** — Transport & Auth core
+- [x] **M2** — Rate limiting
+- [x] **M3** — REST market + account/wallet read
+- [x] **M4** — Orders (`client.orders`: create/cancel/query/openOrders + validation + id-minting + UNKNOWN reconciliation; mock-only, live placement pending a supervised soak)
+- [x] **M5** — WS market streams + order book (`client.ws`: watch_* async iterators for depth/trade/aggTrade/kline/bookTicker/ticker + self-syncing `order_book`; dual-host GLOBAL/SITE routing and shapes **live-verified 2026-07-09** — the ADR-0014 single-host default was flipped to dual-host)
 - [ ] **M6** — User-data stream
 - [ ] **M7** — Hardening & release
 - [x] **Phase 1 (pre-M0)** — models, exceptions, config (already in `main`)

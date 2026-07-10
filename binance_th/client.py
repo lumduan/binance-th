@@ -3,9 +3,11 @@
 :class:`BinanceThClient` owns the :class:`~binance_th.transport.Transport`
 lifecycle behind an async context manager, so
 ``async with BinanceThClient(cfg) as client:`` opens and deterministically
-closes the HTTP connection. M1 exposes the two general endpoints needed to
-bootstrap everything else — :meth:`ping` and :meth:`server_time`; resource
-clients (market, account, orders) arrive in M3.
+closes the HTTP connection and all WebSocket streams. Alongside the general
+endpoints (:meth:`ping`, :meth:`server_time`, :meth:`exchange_info`,
+:meth:`symbol_types`), it composes the resource sub-clients ``market``,
+``account``, ``wallet``, ``orders`` (REST) and ``ws`` (WebSocket market streams
+and local order books, M5).
 """
 
 import asyncio
@@ -17,6 +19,7 @@ from binance_th.config import BinanceThConfig
 from binance_th.market import MarketClient
 from binance_th.models.base import ExchangeInfo, ServerTime, SymbolTypeInfo
 from binance_th.orders import OrdersClient
+from binance_th.stream import StreamClient
 from binance_th.transport import Transport
 from binance_th.wallet import WalletClient
 
@@ -48,6 +51,11 @@ class BinanceThClient:
             exchange_info=self.exchange_info,
             execution_rules=self.market.execution_rules,
         )
+        self.ws = StreamClient(
+            config=self._config,
+            depth_provider=self.market.depth,
+            symbol_type_provider=self.symbol_types,
+        )
         self._exchange_info: ExchangeInfo | None = None
         self._exchange_info_lock = asyncio.Lock()
 
@@ -68,7 +76,12 @@ class BinanceThClient:
         return self._transport.is_closed
 
     async def aclose(self) -> None:
-        """Close the underlying transport; idempotent."""
+        """Close WebSocket streams then the transport; idempotent.
+
+        WS order-book sync tasks call ``market.depth`` on the transport, so the streams
+        are torn down first while the transport is still alive (ADR-0015).
+        """
+        await self.ws.aclose()
         await self._transport.aclose()
 
     async def ping(self) -> bool:

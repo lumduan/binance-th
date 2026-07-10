@@ -42,6 +42,24 @@ URL is built from the resolver, not string-concatenated at call sites.
 - We ship a **default that is still ASSUMED**; if the live console proves the two-host form, the
   default flips (config-only) at M5. Documented as a WBS verification gate, not a silent guess.
 
+## Live verification (M5 · WBS-M5-02 · 2026-07-09)
+
+Probed the real feed read-only (`scripts/probe_ws.py`). **The single-host default is FLIPPED to
+dual-host** — exactly the reversible outcome this ADR planned for:
+
+- `wss://nbstream.binance.th/w3w/wsa/stream?streams=…` **connects and ACKs SUBSCRIBE**
+  (`{"id":…, "result":null}`) **but pushed no market data** in-window — it is the WSA
+  request/response host, not a market-stream push host. Kept as the `ws_base_url` field (reserved,
+  likely M6/user-data), **not** the market-stream default.
+- **Verified working topology = the two config hosts:** GLOBAL symbols stream on
+  `wss://www.binance.th/gstream`, SITE symbols on `wss://www.binance.th/nstream`, both delivering the
+  combined **`{"stream": …, "data": …}`** envelope. The `StreamRouter` therefore routes by symbol
+  `type` to `ws_base_url_global` / `ws_base_url_site` by default (still pure config data — flipping is
+  a two-field change, no client-code change, satisfying the falsifiable criterion).
+- **Consequence:** GLOBAL and SITE live on **different hosts**, so a client watching both types holds
+  **one connection per host** (up to two), keyed by host in `StreamClient` — the `?streams=` combined
+  URL is the verified subscription mechanism on each.
+
 ## Alternatives Considered
 
 - **Trust config's two hosts** — rejected: contradicts the current docs and would bake a likely-stale
