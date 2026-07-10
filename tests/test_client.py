@@ -9,6 +9,7 @@ from binance_th.config import BinanceThConfig
 from binance_th.models.enums import RateLimitInterval, RateLimitType, SymbolType
 from binance_th.ratelimit import DualWindowRateLimiter
 from binance_th.stream import StreamClient
+from binance_th.userstream import UserDataStream
 
 from .conftest import TransportFactory
 
@@ -122,6 +123,22 @@ class TestBinanceThClient:
         assert isinstance(client.ws, StreamClient)
         await client.aclose()
         assert client.ws._closing is True
+        assert client.is_closed is True
+
+    async def test_user_stream_attached_and_torn_down(
+        self, mock_transport: TransportFactory
+    ) -> None:
+        """The client exposes a UserDataStream at ``.user_stream`` and closes it (ADR-0008)."""
+
+        def handler(_request: httpx.Request) -> httpx.Response:  # pragma: no cover - unused
+            return httpx.Response(200, text="pong")
+
+        transport, captured = mock_transport(handler)
+        client = BinanceThClient(transport=transport)
+        assert isinstance(client.user_stream, UserDataStream)
+        await client.aclose()
+        assert client.user_stream._closing is True
+        assert captured == []  # never started -> no listenKey POST/DELETE
         assert client.is_closed is True
 
 
