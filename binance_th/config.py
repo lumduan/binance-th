@@ -46,6 +46,7 @@ class BinanceThConfig(BaseSettings):
         ws_ping_interval: WebSocket ping interval in seconds
         ws_ping_timeout: WebSocket ping timeout in seconds
         ws_supports_live_subscribe: Server accepts live SUBSCRIBE/UNSUBSCRIBE control frames
+        user_stream_keepalive_interval: Seconds between user-data listenKey keepalive PUTs (<1800)
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
         log_requests: Log all API requests (for debugging)
         log_responses: Log all API responses (for debugging)
@@ -134,6 +135,15 @@ class BinanceThConfig(BaseSettings):
             "Whether the server accepts live SUBSCRIBE/UNSUBSCRIBE control frames on an open "
             "connection. When False, dynamic (un)subscribe reconnects with a new `?streams=` URL."
         ),
+    )
+    user_stream_keepalive_interval: float = Field(
+        default=1200.0,
+        description=(
+            "Seconds between user-data-stream listenKey keepalive PUTs. Must stay well under the "
+            "exchange's 30-minute (1800s) expiry (ADR-0008)."
+        ),
+        gt=0,
+        lt=1800.0,
     )
 
     # Logging Settings

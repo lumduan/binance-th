@@ -26,6 +26,7 @@ class TestBinanceThConfig:
         assert config.ws_ping_interval == 20
         assert config.ws_ping_timeout == 10
         assert config.ws_supports_live_subscribe is True
+        assert config.user_stream_keepalive_interval == 1200.0
         assert config.log_level == "INFO"
         assert config.log_requests is False
         assert config.log_responses is False
@@ -97,6 +98,17 @@ class TestBinanceThConfig:
         assert config.rest_base_url == "https://custom.api.com"
         assert config.ws_base_url_global == "wss://custom.ws.com/global"
         assert config.ws_base_url_site == "wss://custom.ws.com/site"
+
+    def test_keepalive_interval_must_stay_under_30_min(self) -> None:
+        """The listenKey keepalive interval is validated < 1800s (ADR-0008)."""
+        assert (
+            BinanceThConfig(user_stream_keepalive_interval=60.0).user_stream_keepalive_interval
+            == 60.0
+        )
+        with pytest.raises(ValueError):
+            BinanceThConfig(user_stream_keepalive_interval=1800.0)
+        with pytest.raises(ValueError):
+            BinanceThConfig(user_stream_keepalive_interval=0)
 
     def test_ws_routing_seam_overridable(self) -> None:
         """The single-host default and the live-subscribe flag are config data (ADR-0014)."""

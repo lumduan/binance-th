@@ -6,8 +6,9 @@ lifecycle behind an async context manager, so
 closes the HTTP connection and all WebSocket streams. Alongside the general
 endpoints (:meth:`ping`, :meth:`server_time`, :meth:`exchange_info`,
 :meth:`symbol_types`), it composes the resource sub-clients ``market``,
-``account``, ``wallet``, ``orders`` (REST) and ``ws`` (WebSocket market streams
-and local order books, M5).
+``account``, ``wallet``, ``orders`` (REST), ``ws`` (WebSocket market streams and
+local order books, M5) and ``user_stream`` (authenticated user-data stream with a
+self-healing order tracker, M6).
 """
 
 import asyncio
@@ -21,6 +22,7 @@ from binance_th.models.base import ExchangeInfo, ServerTime, SymbolTypeInfo
 from binance_th.orders import OrdersClient
 from binance_th.stream import StreamClient
 from binance_th.transport import Transport
+from binance_th.userstream import UserDataStream
 from binance_th.wallet import WalletClient
 
 __all__ = ["BinanceThClient"]
@@ -56,6 +58,11 @@ class BinanceThClient:
             depth_provider=self.market.depth,
             symbol_type_provider=self.symbol_types,
         )
+        self.user_stream = UserDataStream(
+            config=self._config,
+            transport=self._transport,
+            open_orders_provider=self.orders.open_orders,
+        )
         self._exchange_info: ExchangeInfo | None = None
         self._exchange_info_lock = asyncio.Lock()
 
@@ -76,12 +83,14 @@ class BinanceThClient:
         return self._transport.is_closed
 
     async def aclose(self) -> None:
-        """Close WebSocket streams then the transport; idempotent.
+        """Close market streams, then the user-data stream, then the transport; idempotent.
 
-        WS order-book sync tasks call ``market.depth`` on the transport, so the streams
-        are torn down first while the transport is still alive (ADR-0015).
+        Both stream layers run tasks that call REST on the transport (order-book snapshots;
+        the user-data listenKey DELETE + reconciliation), so they are torn down first while
+        the transport is still alive (ADR-0015 / ADR-0008).
         """
         await self.ws.aclose()
+        await self.user_stream.aclose()
         await self._transport.aclose()
 
     async def ping(self) -> bool:

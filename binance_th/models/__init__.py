@@ -80,13 +80,23 @@ from binance_th.models.stream import (
     TickerEvent,
     TradeEvent,
 )
+from binance_th.models.userdata import (
+    AccountBalanceDelta,
+    BalanceUpdateEvent,
+    ExecutionReportEvent,
+    ListenKeyExpiredEvent,
+    OutboundAccountPositionEvent,
+    order_from_execution_report,
+)
 
 __all__ = [
+    "AccountBalanceDelta",
     "AccountInfo",
     "AggTradeEvent",
     "AggregateTrade",
     # Account models
     "Balance",
+    "BalanceUpdateEvent",
     "BookTicker",
     "BookTickerEvent",
     "CancelOrderRequest",
@@ -95,6 +105,7 @@ __all__ = [
     "DepositStatus",
     "DepthUpdateEvent",
     "ExchangeInfo",
+    "ExecutionReportEvent",
     "ExecutionRule",
     "ExecutionRules",
     "FilterType",
@@ -103,6 +114,7 @@ __all__ = [
     "KlineEvent",
     "KlineInterval",
     "ListenKey",
+    "ListenKeyExpiredEvent",
     # Order models
     "Order",
     "OrderBook",
@@ -113,6 +125,7 @@ __all__ = [
     "OrderSide",
     "OrderStatus",
     "OrderType",
+    "OutboundAccountPositionEvent",
     "PriceTicker",
     "QueryOrderRequest",
     "RateLimit",
@@ -141,4 +154,5 @@ __all__ = [
     "WithdrawRecord",
     "WithdrawResult",
     "WithdrawStatus",
+    "order_from_execution_report",
 ]

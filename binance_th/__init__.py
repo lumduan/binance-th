@@ -24,10 +24,11 @@ Example:
     >>> #     book = await client.ws.order_book("BTCTHB")
     >>> #     async for trade in client.ws.watch_trades("BTCTHB"):
     >>> #         ...
+    >>> #     orders = await client.user_stream.order_tracker()   # self-healing local orders
 
 Note:
-    REST clients and WebSocket market streams (M1-M5) are available; the user-data
-    stream (M6) is still planned.
+    REST clients, WebSocket market streams, and the authenticated user-data stream
+    (M1-M6) are available.
 """
 
 from binance_th.client import BinanceThClient
@@ -47,6 +48,7 @@ from binance_th.exceptions import (
     BinanceThWAFError,
     BinanceThWebSocketError,
 )
+from binance_th.listenkey import ListenKeyManager, RestListenKeyManager
 from binance_th.models import (
     KlineInterval,
     OrderSide,
@@ -55,7 +57,9 @@ from binance_th.models import (
     TimeInForce,
 )
 from binance_th.orderbook import LocalOrderBook, ManagedOrderBook
+from binance_th.ordertracker import LocalOrderView, OrderTracker
 from binance_th.stream import StreamClient
+from binance_th.userstream import UserDataStream
 
 __version__ = "0.1.0"
 
@@ -79,15 +83,21 @@ __all__ = [
     "BinanceThWAFError",
     "BinanceThWebSocketError",
     "KlineInterval",
+    # User-data stream (M6)
+    "ListenKeyManager",
     # WebSocket / order book (M5)
     "LocalOrderBook",
+    "LocalOrderView",
     "ManagedOrderBook",
     # Common Enums (for convenience)
     "OrderSide",
     "OrderStatus",
+    "OrderTracker",
     "OrderType",
+    "RestListenKeyManager",
     "StreamClient",
     "TimeInForce",
+    "UserDataStream",
     # Version
     "__version__",
 ]
