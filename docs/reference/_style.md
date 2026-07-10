@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > Style
 
+**English** · [ไทย](../th/reference/_style.md)
+
 How every page under `reference/` is written. Reference is **specification, not tutorial** — it states
 what things are, not how to feel about them.
 

@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > config
 
+**English** · [ไทย](../th/reference/config.md)
+
 **Module:** `binance_th.config` · **Available since:** 1.0.0
 
 Settings for the client. A `pydantic-settings` model: every field reads from an environment variable

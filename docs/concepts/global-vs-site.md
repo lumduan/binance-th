@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Concepts > GLOBAL vs SITE
 
+**English** · [ไทย](../th/concepts/global-vs-site.md)
+
 Binance Thailand lists two kinds of trading symbols, and knowing which is which explains a few things
 that would otherwise look inconsistent.
 

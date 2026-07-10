@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Development > Testing
 
+**English** · [ไทย](../th/development/testing.md)
+
 ## Running the suite
 
 ```bash

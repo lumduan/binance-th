@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Concepts > WebSockets
 
+**English** · [ไทย](../th/concepts/websockets.md)
+
 Both `client.ws` (market streams) and `client.user_stream` (user data) run over WebSocket. The library
 handles connection lifecycle, routing, reconnection, and keepalive so you can just iterate over events.
 

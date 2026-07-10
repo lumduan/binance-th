@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Getting Started > Quickstart
 
+**English** · [ไทย](../th/getting-started/quickstart.md)
+
 This walks through a complete script — public data, a live order book, and a trade stream. No API key
 required.
 

@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Concepts > Money & Decimals
 
+**English** · [ไทย](../th/concepts/money-and-decimals.md)
+
 Every monetary value in binance-th is a Python `Decimal` — prices, quantities, balances, fees, and
 volumes. Nothing money-related is ever a `float`.
 

@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > account
 
+**English** · [ไทย](../th/reference/account.md)
+
 **Module:** `binance_th.account` · **Available since:** 1.0.0
 
 Signed account reads (`client.account`). Every method here is **signed** — it needs an API key and

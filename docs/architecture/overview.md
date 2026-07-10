@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Architecture > Overview
 
+**English** · [ไทย](../th/architecture/overview.md)
+
 How `binance-th` is layered, and where each design decision is recorded. This page is a map — the depth
 lives in the [HLD](../plans/hld.md), [FRD](../plans/frd.md), [WBS](../plans/wbs.md), and the
 [ADRs](../plans/adr/README.md).

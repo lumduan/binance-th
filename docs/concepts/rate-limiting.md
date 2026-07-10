@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Concepts > Rate limiting
 
+**English** · [ไทย](../th/concepts/rate-limiting.md)
+
 binance-th paces your requests so you stay under Binance Thailand's limits, and it corrects itself from
 the exchange's own counters. It's on by default; you rarely think about it.
 

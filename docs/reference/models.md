@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Reference > models
 
+**English** · [ไทย](../th/reference/models.md)
+
 **Module:** `binance_th.models` · **Available since:** 1.0.0
 
 Every public Pydantic model and enum. You rarely construct these yourself — the client returns them — but

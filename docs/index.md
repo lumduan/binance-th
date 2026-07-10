@@ -1,5 +1,7 @@
 # binance-th documentation
 
+**English** · [ไทย](th/index.md)
+
 A typed, async Python client for the Binance **Thailand** API — REST + WebSocket.
 
 ```python

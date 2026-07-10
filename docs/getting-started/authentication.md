@@ -2,6 +2,8 @@
 
 [Home](../index.md) > Getting Started > Authentication
 
+**English** · [ไทย](../th/getting-started/authentication.md)
+
 Public market data and market streams need no credentials. Signed reads (account, wallet), order
 management, and the user-data stream do. binance-th signs requests for you — you just supply the keys.
 
