@@ -1,0 +1,182 @@
+# binance-th
+
+> Async Python client for the Binance **Thailand** (binance.th) API — REST + WebSocket, fully typed
+> (Pydantic v2), `Decimal` money, `mypy --strict`. Python 3.12+. Version 1.0.0, MIT.
+
+Everything hangs off one async client, `BinanceThClient`, used as an async context manager. It exposes
+namespaced sub-clients: `.market` (public data), `.account`/`.wallet` (signed reads), `.orders` (signed
+order management), `.ws` (public WebSocket market streams + a self-syncing order book), and
+`.user_stream` (the authenticated user-data stream + a self-healing order tracker). Public market data
+needs no credentials; signed calls need `BINANCE_TH_API_KEY` + `BINANCE_TH_API_SECRET`; the user-data
+stream needs only the API key (no secret).
+
+## Install
+
+```bash
+uv add binance-th   # or:  pip install binance-th
+```
+
+## Entry point
+
+`from binance_th import BinanceThClient, BinanceThConfig`
+
+- `BinanceThClient(config: BinanceThConfig | None = None)` — async context manager. `config` defaults to
+  reading `BINANCE_TH_*` env vars / a `.env` file.
+- Client methods (public): `await client.ping() -> bool`, `await client.server_time() -> ServerTime`,
+  `await client.exchange_info(*, force=False) -> ExchangeInfo`,
+  `await client.symbol_types(*, symbol=None) -> list[SymbolTypeInfo]`.
+- `await client.aclose()` (or exit the `async with`) tears down streams then the transport.
+
+Always use `async with BinanceThClient() as client:` — it is a stateful, must-close resource.
+
+## Namespaces & methods (exact signatures)
+
+### client.market — public market data (unsigned)
+- `await depth(symbol, *, limit=None) -> OrderBook`
+- `await trades(symbol, *, limit=None) -> list[Trade]`
+- `await agg_trades(symbol, *, limit=None) -> list[AggregateTrade]`
+- `await klines(symbol, interval, *, limit=None, start_time=None, end_time=None) -> list[Kline]`
+- `iter_klines(symbol, interval, *, start_time, end_time, limit=1000) -> AsyncIterator[Kline]`  (paginates)
+- `await ticker_price(symbol) -> PriceTicker`
+- `await ticker_24hr(symbol) -> Ticker24hr`
+- `await book_ticker(symbol) -> BookTicker`
+- `await reference_price(symbol) -> ReferencePrice`  (GLOBAL symbols only; SITE/THB → 400)
+- `await execution_rules() -> ExecutionRules`  (GLOBAL only)
+
+### client.account — signed account reads
+- `await account() -> AccountInfo`
+- `await trade_fees(*, symbol=None) -> list[TradeFee]`
+- `await user_trades(symbol, *, limit=None, start_time=None, end_time=None) -> list[UserTrade]`
+- `iter_user_trades(symbol, *, start_time, end_time, limit=1000) -> AsyncIterator[UserTrade]`
+
+### client.wallet — signed wallet reads
+- `await deposit_address(coin, *, network=None) -> DepositAddress`
+- `await deposit_history(*, coin=None, start_time=None, end_time=None, limit=None) -> list[DepositRecord]`
+- `iter_deposit_history(*, coin=None, start_time, end_time, limit=1000) -> AsyncIterator[DepositRecord]`
+- `await withdraw_history(*, coin=None, start_time=None, end_time=None, limit=None) -> list[WithdrawRecord]`
+
+### client.orders — signed order management (create/cancel are mutating)
+- `await create_order(symbol, side, order_type, *, quantity=None, price=None, time_in_force=None, quote_order_qty=None, stop_price=None, new_client_order_id=None, recv_window=None, validate=True) -> Order`
+  — or pass a prebuilt `request=OrderRequest(...)` instead of the field kwargs (not both). Snaps price/qty
+  to the symbol's filters, mints a client-order-id before sending, and on a 5xx/timeout reconciles by
+  client-order-id (raising `BinanceThOrderUnknownError` if the outcome stays unknown).
+- `await cancel_order(symbol, *, order_id=None, orig_client_order_id=None, recv_window=None) -> Order`
+  (need `order_id` XOR `orig_client_order_id`)
+- `await query_order(symbol, *, order_id=None, orig_client_order_id=None, recv_window=None) -> Order`
+- `await open_orders(symbol=None) -> list[Order]`
+
+### client.ws — public WebSocket market streams (StreamClient)
+- `watch_depth(symbol) -> AsyncIterator[DepthUpdateEvent]`  (raw diff-depth)
+- `watch_trades(symbol) -> AsyncIterator[TradeEvent]`
+- `watch_agg_trades(symbol) -> AsyncIterator[AggTradeEvent]`
+- `watch_klines(symbol, interval="1m") -> AsyncIterator[KlineEvent]`
+- `watch_book_ticker(symbol) -> AsyncIterator[BookTickerEvent]`
+- `watch_ticker(symbol) -> AsyncIterator[TickerEvent]`
+- `await order_book(symbol, *, limit=1000) -> ManagedOrderBook`  (a started, self-syncing local book)
+
+`ManagedOrderBook`: `await wait_synced()`, `.synced -> bool`, `.best_bid()`/`.best_ask() -> (Decimal, Decimal) | None`,
+`.bids(n=10)`/`.asks(n=10) -> list[(Decimal, Decimal)]`, `await aclose()`.
+
+### client.user_stream — authenticated user-data stream (UserDataStream; API-key listenKey)
+- `watch_orders() -> AsyncIterator[ExecutionReportEvent]`
+- `watch_account() -> AsyncIterator[OutboundAccountPositionEvent]`
+- `watch_balances() -> AsyncIterator[BalanceUpdateEvent]`
+- `await order_tracker() -> OrderTracker`  (a started, self-healing view of your open orders)
+
+`OrderTracker`: `await wait_synced()`, `.synced -> bool`, `.open() -> list[Order]`, `.get(order_id) -> Order | None`,
+`await aclose()`.
+
+## Conventions (an agent MUST follow these)
+
+- **Money is `Decimal`** — pass `Decimal("...")` for prices/quantities; never `float`. All money fields
+  come back as `Decimal`.
+- **snake_case ↔ camelCase** — Python attributes are snake_case (`order_id`), the wire is camelCase
+  (`orderId`). Models accept either name (`populate_by_name=True`).
+- **Response models allow extra fields** (`extra="allow"`, forward-compatible); **request models forbid
+  them** (`extra="forbid"`, catches typos).
+- **GLOBAL vs SITE symbols** — `SymbolType.GLOBAL` (e.g. `BTCUSDT`) vs `SymbolType.SITE` (e.g. `BTCTHB`).
+  They can carry different fields (some are `Optional` for that reason); the WS layer routes each type to
+  its host automatically. `reference_price`/`execution_rules` are GLOBAL-only.
+- **Errors: a `5xx` (`BinanceThServerError`) means the outcome is UNKNOWN, not failed** — verify order
+  state before retrying. `BinanceThOrderUnknownError.resubmittable` is `True` only when a reconcile query
+  positively confirmed the order was NOT placed.
+- **⚠ ASSUMED shapes** — the **signed** (account/wallet/order) response models and the **user-data event**
+  models (`ExecutionReportEvent`, `OutboundAccountPositionEvent`, `BalanceUpdateEvent`) are modelled to
+  standard Binance shapes but NOT fully verified against Binance Thailand's live API. Treat their exact
+  field sets as provisional (unknown fields are preserved via `extra="allow"`). Market WS + public REST
+  shapes are live-verified.
+- **Array-shaped endpoints** use classmethods, not direct construction: `Kline.from_list(list)`,
+  `OrderBook.from_api(dict)`, `OrderBookEntry.from_list([price, qty])`.
+
+## Config — `BinanceThConfig` (env prefix `BINANCE_TH_`, or a `.env` file)
+
+`api_key`, `api_secret` (SecretStr), `rest_base_url` (`https://api.binance.th`), `ws_base_url_global`
+(`wss://www.binance.th/gstream`), `ws_base_url_site` (`wss://www.binance.th/nstream`), `ws_base_url`
+(WSA host for user-data), `timeout` (30.0), `max_retries` (3), `recv_window` (5000, ≤60000),
+`ws_auto_reconnect` (True), `ws_ping_interval` (20), `ws_ping_timeout` (10),
+`user_stream_keepalive_interval` (1200, <1800), `log_requests`/`log_responses` (False; redact secrets).
+Helpers: `has_credentials()`, `get_secret_value()`. Env example: `BINANCE_TH_API_KEY=...`,
+`BINANCE_TH_API_SECRET=...`.
+
+## Exceptions — root `BinanceThError`
+
+`BinanceThAPIError` (has `status_code`, `request_id`, `response_data`) → `BinanceThBadRequestError` (400),
+`BinanceThAuthError` (401), `BinanceThWAFError` (403), `BinanceThIPBannedError` (418),
+`BinanceThRateLimitError` (429, `retry_after`/`used_weight`), `BinanceThServerError` (5xx, UNKNOWN).
+Direct: `BinanceThNetworkError`, `BinanceThTimeoutError`, `BinanceThValidationError` (`field`/`value`),
+`BinanceThWebSocketError`, `BinanceThOrderUnknownError` (`client_order_id`/`symbol`/`resubmittable`).
+
+## Enum value sets
+
+`OrderSide`: BUY, SELL. `OrderType`: LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT,
+TAKE_PROFIT_LIMIT, LIMIT_MAKER. `OrderStatus`: NEW, PARTIALLY_FILLED, FILLED, CANCELED, REJECTED, EXPIRED.
+`TimeInForce`: GTC, IOC, FOK. `KlineInterval`: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M.
+`SymbolType`: GLOBAL, SITE.
+
+## Examples
+
+```python
+import asyncio
+from decimal import Decimal
+from binance_th import BinanceThClient, BinanceThConfig, OrderSide, OrderType, TimeInForce
+
+async def main() -> None:
+    async with BinanceThClient() as client:
+        # public REST
+        book = await client.market.depth("BTCTHB", limit=5)
+        candles = [k async for k in client.market.iter_klines(
+            "BTCTHB", "1h", start_time=1700000000000, end_time=1700086400000)]
+
+        # WebSocket: live order book + trades
+        ob = await client.ws.order_book("BTCTHB")
+        await ob.wait_synced()
+        best_bid = ob.best_bid()
+        async for trade in client.ws.watch_trades("BTCTHB"):
+            print(trade.price, trade.quantity); break
+        await ob.aclose()
+
+    # signed calls need credentials (BINANCE_TH_API_KEY/_API_SECRET)
+    async with BinanceThClient(BinanceThConfig()) as client:
+        info = await client.account.account()                      # balances
+        order = await client.orders.create_order(                  # place a limit order
+            "BTCTHB", OrderSide.BUY, OrderType.LIMIT,
+            quantity=Decimal("0.001"), price=Decimal("2000000"), time_in_force=TimeInForce.GTC)
+        await client.orders.cancel_order("BTCTHB", order_id=order.order_id)
+
+        tracker = await client.user_stream.order_tracker()         # live open-order view
+        await tracker.wait_synced()
+        print(tracker.open())
+        await tracker.aclose()
+
+asyncio.run(main())
+```
+
+## Links
+
+- Docs index: docs/index.md
+- Quickstart: docs/getting-started/quickstart.md
+- Authentication: docs/getting-started/authentication.md
+- API reference: docs/reference/index.md
+- Concepts: GLOBAL vs SITE (docs/concepts/global-vs-site.md), Errors & reconciliation
+  (docs/concepts/errors-and-reconciliation.md), Assumed shapes (docs/concepts/assumed-shapes.md)
+- Source: https://github.com/lumduan/binance-th · PyPI: https://pypi.org/project/binance-th/
