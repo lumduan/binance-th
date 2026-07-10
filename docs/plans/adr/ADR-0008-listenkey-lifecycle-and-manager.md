@@ -44,6 +44,29 @@ REST `openOrders`+`userTrades` reconstruction.
 - Maintaining an interface for a second implementation that may never ship is mild over-engineering —
   accepted because the WSA path is plausible and the interface is cheap.
 
+## Live verification (M6 · 2026-07-10)
+
+Probed the real API read-only (`scripts/probe_userdata.py`, key-only, no orders):
+
+- **`POST /api/v1/listenKey` returns a LIST — one key per symbol type**
+  (`[{listenKey, type:"GLOBAL"}, {listenKey, type:"SITE"}]`), a TH-specific deviation from vanilla
+  Binance's single key. So the user-data stream is **dual**: one connection per type, each with its
+  own listenKey. `UserDataStream` keys its connections by `SymbolType` (the seam this ADR anticipated).
+- **Connect URL (both types):** `wss://nbstream.binance.th/w3w/wsa/stream/ws/<listenKey>` (the WSA host
+  `+ /ws/ + key`). The market hosts are inconsistent (GLOBAL/`gstream` → HTTP 502, SITE/`nstream` →
+  connects), so the WSA host is used uniformly. **The REST-listenKey `/ws/<key>` form works, so no
+  WSA-native session auth is needed** — that alternative stays a (currently unused) fallback behind the
+  `ListenKeyManager` seam, vindicating the interface.
+- **keepalive/close = `?listenKey=<key>`** (no-params & `?type=` → `-1102`). **GLOBAL** (60-char key)
+  PUT/DELETE → OK. **SITE** (64-char key) → server rejects with `-1100 Illegal characters … ^[a-zA-Z0-9]
+  {1,60}$` — the SITE key exceeds the server's own 60-char keepalive regex (a TH bug). So **SITE keys
+  are not keepalive-able/deletable**; they expire (~60 min) and the SITE connection self-heals via the
+  drop→recreate→reconcile path. Keepalive/close are therefore **best-effort per key** (suppress per-key
+  failures; never crash the manager) — the reconcile-on-reconnect design already covers the fallout.
+- **Event shapes not yet observed** (account idle in-window) → `executionReport`/
+  `outboundAccountPosition`/`balanceUpdate` remain ⚠ASSUMED (Binance-standard, `extra="allow"`),
+  inherited by a later order-activity soak.
+
 ## Alternatives Considered
 
 - **Hardcode the REST listenKey flow** — rejected: if TH uses WSA-native auth, this is a rewrite of
