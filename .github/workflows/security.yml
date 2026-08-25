@@ -21,6 +21,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           version: "latest"
+          cache-suffix: ${{ github.job }}
 
       - name: Set up Python
         run: uv python install 3.12
@@ -45,6 +46,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           version: "latest"
+          cache-suffix: ${{ github.job }}
 
       - name: Set up Python
         run: uv python install 3.12
@@ -84,6 +86,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           version: "latest"
+          cache-suffix: ${{ github.job }}
 
       - name: Set up Python
         run: uv python install 3.12
