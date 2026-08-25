@@ -54,3 +54,24 @@ updates:
           - "pydantic"
           - "pydantic-settings"
           - "websockets"
+
+  # `.pre-commit-config.yaml` pins its own hook revisions, which the uv ecosystem above
+  # does NOT manage. Those pins drifted to ruff 0.15.0 / mypy 1.14.1 while uv.lock moved
+  # to 0.16.4 / 2.3.1, so a local `pre-commit run` used a ruff that predated the markdown
+  # formatter and the UP047 rule -- it passed clean on exactly what CI then failed on.
+  #
+  # ruff-pre-commit and mirrors-mypy mirror packages that are ALSO in the dev-tooling
+  # group above, so the same tool is bumped by two ecosystems. Same weekday keeps the two
+  # PRs together; when they land apart, re-sync the pins with uv.lock rather than leaving
+  # local hooks and CI on different versions.
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"
+    groups:
+      pre-commit-hooks:
+        patterns:
+          - "*"
