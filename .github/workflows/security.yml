@@ -15,10 +15,10 @@ jobs:
     name: SAST (bandit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           version: "latest"
 
@@ -31,14 +31,18 @@ jobs:
       - name: Run bandit (SAST)
         run: uv run bandit -r binance_th
 
-  pip-audit:
-    name: Dependency audit (pip-audit)
+  # BLOCKING gate. Audits only the dependency closure a consumer of
+  # `pip install binance-th` actually receives (httpx / pydantic / pydantic-settings /
+  # websockets + their transitives). A CVE here is a real supply-chain risk for
+  # downstream users, so it fails the build.
+  pip-audit-runtime:
+    name: Dependency audit — runtime (blocking)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           version: "latest"
 
@@ -48,5 +52,44 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
-      - name: Run pip-audit (dependency CVEs)
+      # `--no-color` is load-bearing: without it uv writes ANSI escapes into the redirect
+      # and pip-audit rejects the file ("invalid specifier at line 1"). `--no-emit-project`
+      # drops the editable self-reference, so `--skip-editable` is unnecessary here.
+      - name: Export runtime-only dependency closure
+        run: |
+          uv export --no-color --no-dev --no-emit-project \
+            --format requirements-txt > runtime-requirements.txt
+          echo "Auditing $(grep -c '^[a-zA-Z]' runtime-requirements.txt) shipped packages:"
+          grep '^[a-zA-Z]' runtime-requirements.txt | sed 's/ *\\$//'
+
+      - name: Run pip-audit (runtime dependency CVEs)
+        run: uv run pip-audit --no-deps -r runtime-requirements.txt
+
+  # ADVISORY only — deliberately NOT a merge gate. Audits the full dev toolchain (ruff,
+  # mypy, pytest, twine, pip-audit itself and their transitives), none of which ships.
+  #
+  # Why non-blocking: from 2026-08-10 this gate was red for three consecutive weekly runs
+  # on `pip` (pulled in by pip-audit's OWN pip-api) and `cryptography` (via
+  # twine -> keyring -> secretstorage). Neither is reachable from an installed
+  # `binance-th`, yet both blocked every PR. Keep it reporting, not gating — the real
+  # supply-chain gate is `pip-audit-runtime` above. Do not remove `continue-on-error`.
+  pip-audit-dev:
+    name: Dependency audit — dev toolchain (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run pip-audit (full environment, non-blocking)
         run: uv run pip-audit --skip-editable
