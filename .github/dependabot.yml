@@ -1,7 +1,7 @@
 # Keeps the two things that silently rot until CI goes red on a Monday morning: the
 # GitHub Actions runtimes (the Node 20 -> Node 24 deprecation surfaced only as a warning
 # annotation on every run) and uv.lock (a `cryptography` / `pip` advisory held the weekly
-# security scan red for three runs before anyone looked). Grouped to keep this to two PRs.
+# security scan red for three runs before anyone looked).
 version: 2
 
 updates:
@@ -23,6 +23,34 @@ updates:
       day: "monday"
     commit-message:
       prefix: "build(deps)"
+    # Group by PATTERN, not by `dependency-type: development`. That classifier matches
+    # nothing here: Dependabot's uv ecosystem does not treat PEP 621
+    # `[project.optional-dependencies] dev` extras as development dependencies, so the
+    # group silently matched zero packages and all six updates fell through ungrouped
+    # (PRs #16-#21, 2026-08-25). Do not reintroduce `dependency-type` for this ecosystem.
+    #
+    # A dependency lands in the FIRST group whose patterns it matches, so `runtime` is
+    # declared first; `exclude-patterns` on the catch-all restates that intent explicitly
+    # rather than relying on declaration order alone.
     groups:
-      dev-dependencies:
-        dependency-type: "development"
+      # The four declared runtime dependencies. A bump here rewrites the published
+      # constraint in pyproject.toml — e.g. Dependabot widened `websockets>=13.0,<16.0`
+      # to `<18.0` in #17 — which is an API-compatibility decision for every downstream
+      # consumer, not a routine dependency bump. Keep it reviewable on its own.
+      runtime:
+        patterns:
+          - "httpx"
+          - "pydantic"
+          - "pydantic-settings"
+          - "websockets"
+      # Everything else is dev tooling or its transitives. None of it ships, and the
+      # advisory `pip-audit-dev` job means none of it can block a merge, so one batched
+      # PR a week is enough.
+      dev-tooling:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "httpx"
+          - "pydantic"
+          - "pydantic-settings"
+          - "websockets"
