@@ -83,6 +83,13 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["binance_th"]
 
+[tool.ruff.format]
+# ruff 0.16 added Markdown support to `ruff format`. Left on, it reformats the code
+# blocks in all 34 files of the bilingual docs tree — collapsing hand-aligned trailing
+# comment columns and exploding compact example calls. Docs examples are authored for
+# readability, not formatter-canonical output. Python formatting is unaffected.
+exclude = ["*.md"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

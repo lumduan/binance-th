@@ -7,14 +7,11 @@ progress. Reused by market klines (M3a) and signed history endpoints (M3b).
 """
 
 from collections.abc import AsyncIterator, Awaitable, Callable, Hashable, Sequence
-from typing import TypeVar
 
 __all__ = ["iter_time_windows"]
 
-T = TypeVar("T")
 
-
-async def iter_time_windows(
+async def iter_time_windows[T](
     fetch: Callable[[int, int], Awaitable[Sequence[T]]],
     *,
     start_time: int,
