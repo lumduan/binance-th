@@ -52,6 +52,9 @@ time. Items are the unit of PR; exit criteria are testable.
 
 ## M5 — WS market streams + order book (`0.6.0`) — **done, live-verified 2026-07-09**
 
+> Re-verified live 2026-08-25 under websockets 17.0.1 (range widened to `<18.0`): both hosts stream and
+> `ManagedOrderBook` syncs. See `scripts/probe_ws.py`.
+
 | ID | Title | Deps | ADRs | FRs | Sz | Exit criteria |
 |----|-------|------|------|-----|----|---------------|
 | WBS-M5-01 ✅ | WS client + stream router (`?streams=`, GLOBAL/SITE) | M1-01 | 0014, 0015 | FR-WSS-01, FR-WSS-03 | L | 2-symbol multiplex; routing is config data |
@@ -59,6 +62,10 @@ time. Items are the unit of PR; exit criteria are testable.
 | WBS-M5-03 ✅ | Local order-book sync engine | M5-01, M3-01 | 0007 | FR-WSS-02 | L | update-id gap → re-snapshot; replay == reference book |
 
 ## M6 — User-data stream (`0.7.0`) — **done, lifecycle live-verified 2026-07-10**
+
+> Re-verified live 2026-08-25 under websockets 17.0.1: listenKey POST/PUT/DELETE and every working
+> connect form behave as recorded (incl. the SITE 64-char keepalive rejection). Event shapes are
+> UNCHANGED — still ⚠ASSUMED; the account was idle, so no event fired. See `scripts/probe_userdata.py`.
 
 | ID | Title | Deps | ADRs | FRs | Sz | Exit criteria |
 |----|-------|------|------|-----|----|---------------|

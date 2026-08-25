@@ -19,6 +19,11 @@ which so you don't over-trust their exact field sets.
 | Orders (`create`/`cancel`/`query`) | ⚠ ASSUMED — mock-tested only (they move real money) |
 | User-data **events** (`executionReport`, `outboundAccountPosition`, `balanceUpdate`) | ⚠ ASSUMED — the probe saw the stream connect but no event fired on an idle account |
 
+The three ✅ rows were re-verified live on **2026-08-25** under **websockets 17.0.1** (the dependency
+range widened to `<18.0`), reproducing every shape the original probes recorded. That run did **not**
+change the last row: the probe connected but the account was idle, so no `executionReport` was ever
+emitted. Only a credentialed order soak can close that one.
+
 ## Why it's safe to use anyway
 
 - Response models use `extra="allow"`, so any field the exchange sends that isn't modelled is
