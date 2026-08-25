@@ -29,7 +29,19 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Added
 
-- `.github/dependabot.yml` — weekly grouped updates for GitHub Actions and `uv.lock`.
+- `.github/dependabot.yml` — weekly grouped updates for GitHub Actions, `uv.lock`, and the
+  `.pre-commit-config.yaml` hook revisions.
+
+### Verified
+
+- **`websockets` 17.0.1 live-verified (2026-08-25).** The runtime range widened from `<16.0` to
+  `<18.0`; the WS transport was re-checked against the live API rather than assumed. Market streams
+  on both `/gstream` and `/nstream`, the self-syncing `ManagedOrderBook`, and the full listenKey
+  lifecycle + every working user-data connect form all behave exactly as the original probes
+  recorded — including the SITE 64-char keepalive rejection. This exercises
+  `binance_th/stream.py` `_default_connect`, which is `pragma: no cover` and therefore untouched by
+  the unit suite. User-data **event shapes** are **unchanged and still ⚠ASSUMED**: the probe
+  connected but the account was idle, so no `executionReport` was emitted.
 
 ## [1.0.0] - 2026-07-10
 
