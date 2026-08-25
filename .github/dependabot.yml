@@ -75,3 +75,12 @@ updates:
       pre-commit-hooks:
         patterns:
           - "*"
+    # The mypy hook's `additional_dependencies` mirror pyproject's declared MINIMUMS, so
+    # they must not track uv.lock. Dependabot treats them as ordinary dependencies and
+    # raised all four to the locked versions in #26; ignore them so it bumps hook
+    # revisions only. The uv ecosystem above still updates these packages normally.
+    ignore:
+      - dependency-name: "httpx"
+      - dependency-name: "pydantic"
+      - dependency-name: "pydantic-settings"
+      - dependency-name: "websockets"
