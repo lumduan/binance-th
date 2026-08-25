@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from typing import TypeVar
 
 from pydantic import Field
 
@@ -24,10 +23,8 @@ from binance_th.models.base import ResponseModel
 from binance_th.models.enums import OrderSide, OrderStatus, OrderType, TimeInForce
 from binance_th.models.orders import Order
 
-_E = TypeVar("_E", bound=StrEnum)
 
-
-def _coerce(enum_cls: type[_E], raw: str, default: _E) -> _E:
+def _coerce[E: StrEnum](enum_cls: type[E], raw: str, default: E) -> E:
     """Coerce a wire string to an enum, falling back to ``default`` on an unmodeled value."""
     try:
         return enum_cls(raw)
